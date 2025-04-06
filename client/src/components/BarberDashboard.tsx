@@ -23,8 +23,8 @@ export default function BarberDashboard() {
     
     toast({
       title: "Queue Updated",
-      description: "New changes have arrived",
-      duration: 10000, // 10 seconds
+      description: null, // Removing description for cleaner notification
+      duration: 1000, // 1 second
     });
   }, []));
   
@@ -71,8 +71,8 @@ export default function BarberDashboard() {
   const handleRefresh = async () => {
     toast({
       title: "Refreshing queue...",
-      description: "Getting the latest data",
-      duration: 10000, // 10 seconds
+      description: null,
+      duration: 1000, // 1 second
     });
     
     try {
@@ -89,7 +89,7 @@ export default function BarberDashboard() {
         title: "Refresh failed",
         description: "Failed to refresh queue data",
         variant: "destructive",
-        duration: 10000, // 10 seconds
+        duration: 1500, // 1.5 seconds - slightly longer for error messages
       });
     }
   };
@@ -133,10 +133,9 @@ export default function BarberDashboard() {
       </div>
       
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         {isStatsLoading ? (
           <>
-            <Skeleton className="h-32 w-full" />
             <Skeleton className="h-32 w-full" />
             <Skeleton className="h-32 w-full" />
           </>
@@ -153,12 +152,6 @@ export default function BarberDashboard() {
               value={statsData?.almostDone || 0} 
               icon={<Clock className="text-yellow-400" />} 
               iconColor="yellow"
-            />
-            <StatsCard 
-              title="Total" 
-              value={statsData?.total || 0} 
-              icon={<Mail className="text-purple-400" />} 
-              iconColor="purple"
             />
           </>
         )}

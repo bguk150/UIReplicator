@@ -42,7 +42,7 @@ export function useSmsNotification() {
           title: "SMS Failed",
           description: null, // No description for cleaner notification
           variant: "destructive",
-          duration: 1000 // 1 second
+          duration: 1500 // 1.5 seconds for error messages
         });
         return null;
       }

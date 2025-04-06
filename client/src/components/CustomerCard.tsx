@@ -37,7 +37,7 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
         title: "Error",
         description: null,
         variant: "destructive",
-        duration: 1000, // 1 second
+        duration: 1500, // 1.5 seconds for error messages
       });
     },
   });
@@ -71,7 +71,7 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
         title: "Error",
         description: null,
         variant: "destructive",
-        duration: 1000, // 1 second
+        duration: 1500, // 1.5 seconds for error messages
       });
     },
   });
