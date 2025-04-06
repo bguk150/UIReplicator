@@ -46,24 +46,19 @@ async function sendSMS(phoneNumber: string, name: string): Promise<{ success: bo
     }
     
     const url = "https://rest.clicksend.com/v3/sms/send";
-    const message = `Hi ${name}, it's Beyond Grooming✂️💈
-
-Just a heads-up – there's 1 person ahead of you in the queue! You've got 15 minutes to arrive and secure your spot in the chair.
-
-Don't lose your deposit – make it on time!
-
-See you soon!`;
+    const message = `Beyond Grooming: Hi ${name}, you're almost up! Only 1 person ahead in the queue. Please arrive within 15 minutes to keep your spot. Thank you!`;
     
-    // Format phone number (add country code if needed)
+    // Format phone number to always use +44 for UK numbers
     let formattedPhone = phoneNumber.trim();
     
-    // Handle various UK number formats
     // Remove all spaces, dashes, parentheses, and other non-numeric characters except +
     formattedPhone = formattedPhone.replace(/[^0-9+]/g, '');
     
+    // Converting all UK numbers to +44 format
+    
     // If it already has +44, keep it as is
     if (formattedPhone.startsWith('+44')) {
-      // Already in international format
+      // Already correct
     }
     // If it starts with 44, add a plus
     else if (formattedPhone.startsWith('44')) {
@@ -73,8 +68,15 @@ See you soon!`;
     else if (formattedPhone.startsWith('07')) {
       formattedPhone = '+44' + formattedPhone.substring(1);
     }
-    // If it doesn't have a country code but starts with 7 (omitting the leading 0)
+    // If it starts with 7 (omitting the leading 0)
     else if (formattedPhone.startsWith('7') && formattedPhone.length === 10) {
+      formattedPhone = '+44' + formattedPhone;
+    }
+    // For any other format, force the number to be in +44 format if it's a UK number
+    else if (!formattedPhone.startsWith('+')) {
+      // If it doesn't have any country code, assume it's a UK number
+      // Remove any leading zeros
+      formattedPhone = formattedPhone.replace(/^0+/, '');
       formattedPhone = '+44' + formattedPhone;
     }
     
@@ -88,7 +90,7 @@ See you soon!`;
           "source": "nodejs",
           "body": message,
           "to": formattedPhone,
-          "from": "Beyond Barber",
+          "from": "BGrooming",
           "schedule": 0,
           "custom_string": ""
         }
