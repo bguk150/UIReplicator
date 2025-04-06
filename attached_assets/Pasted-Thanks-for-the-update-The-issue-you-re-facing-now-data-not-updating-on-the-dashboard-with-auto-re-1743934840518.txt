@@ -1,0 +1,108 @@
+Thanks for the update. The issue you're facing now—**data not updating on the dashboard with auto-refresh not working**—can come from several possible causes. Based on your screenshot and everything done so far, here’s a step-by-step breakdown to pinpoint and resolve the issue:
+
+---
+
+### ✅ What’s working:
+- **Your deployment is live** at `https://beyondgrooming.onrender.com/dashboard`
+- The UI is rendering correctly
+- The system says “Auto-refresh every 30s,” which means some kind of polling or WebSocket is intended
+
+---
+
+### ❌ What’s not working:
+- Customers checking in (from your iPad or any device) **don’t appear** on the dashboard
+- The dashboard data (Waiting / Almost Done) **stays at 0**
+- **Auto-refresh doesn’t seem to be triggering** or pulling fresh data
+
+---
+
+### 🔍 Top Suspected Causes & How to Check Each
+
+---
+
+#### 1. **Auto-refresh Logic Not Triggering or Failing Silently**
+✅ Check if the front-end dashboard has a `setInterval()` or WebSocket event calling the queue refresh endpoint (e.g. `/api/queue/stats` or `/api/queue`).
+
+👉 **Debug Steps:**
+- Open DevTools (`F12`) in your browser
+- Go to the **Network tab**
+- Wait ~30 seconds
+- See if any calls are being made to an API (likely `/api/queue`, `/api/queue/stats`, etc.)
+- If **nothing happens**, the timer may be broken.
+- If there **is a call but the result is empty**, continue to step 2
+
+---
+
+#### 2. **API Returns Correct Data but Not Rendered**
+✅ The client-side might be calling the backend, but it’s getting empty results because the database is empty (or wrong env).
+
+👉 **Debug Steps:**
+- Use browser DevTools Network → check the response from `/api/queue` or similar
+- If it says `[]`, that means **nothing is being returned** by the backend
+- Check if your Render app is **connected to the correct Neon DB** (via `DATABASE_URL`)
+- You can log into Neon or use Postgres client to **inspect if any customers are present**
+
+---
+
+#### 3. **WebSocket Not Working on Render**
+From earlier logs and screenshots, we know that:
+- Replit was working ✅
+- But Render logs were showing **WebSocket disconnects or 401 Unauthorized**
+
+👉 This suggests your **live updating** may **depend on WebSockets**, and they’re **failing on Render**.
+
+📌 Since the dashboard says **"Auto-refresh every 30s"**, your app might be falling back to polling — but if polling isn't implemented correctly, it won’t update.
+
+---
+
+#### 4. **The Backend is Not Returning Real-Time Data**
+Your backend may be filtering data based on:
+- `shopId`
+- `isServed`
+- `status` or `paymentVerified`
+
+👉 **Check if the query logic is like:**
+```ts
+SELECT * FROM queue WHERE isServed = false
+```
+If no customers are added to the queue in this database, **it will return empty results**.
+
+---
+
+### ✅ Quick Fix Checklist
+
+| Step | What to check | Action |
+|------|----------------|--------|
+| 1 | DevTools > Network > Look for fetch call | Is it hitting the API every 30s? |
+| 2 | DevTools > Console | Any JS errors? CORS errors? |
+| 3 | Database content | Log into Neon and check if any rows exist |
+| 4 | WebSocket vs Polling | If WebSocket fails, does polling fallback work properly? |
+| 5 | Render logs | Any errors in `/api/queue` or `/api/auth/session` |
+
+---
+
+### ✅ Temporary Debug Solution
+If WebSockets are not reliable on Render, switch to polling:
+
+```ts
+// in dashboard page (example only)
+setInterval(async () => {
+  const res = await fetch('/api/queue/stats');
+  const data = await res.json();
+  updateDashboard(data);
+}, 30000); // every 30s
+```
+
+You can also **temporarily add a debug log** to confirm it's hitting:
+```ts
+console.log("Polling queue stats");
+```
+
+---
+
+Would you like to:
+1. **Check the Network tab together**?
+2. **Log a debug statement in the code** to confirm polling/WebSocket is firing?
+3. **Inspect the Neon DB directly** to confirm customers exist?
+
+Let’s fix this one step at a time 🔍.
