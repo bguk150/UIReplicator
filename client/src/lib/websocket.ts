@@ -69,7 +69,17 @@ class WebSocketManager {
       this.maxReconnectAttempts = 10;
     }
     
-    const wsUrl = `${protocol}//${host}/ws`;
+    // For Render deployments, ensure we use the correct WebSocket URL
+    // This handles the case where client and server might be on different domains/ports in production
+    let wsUrl;
+    if (isProduction && window.location.hostname.includes('onrender.com')) {
+      // Use the exact hostname with wss protocol for Render's environment
+      wsUrl = `wss://${window.location.hostname}/ws`;
+      console.log('Using Render-specific WebSocket URL:', wsUrl);
+    } else {
+      // Standard WebSocket URL construction for development or other environments
+      wsUrl = `${protocol}//${host}/ws`;
+    }
     
     console.log('Connecting to WebSocket at:', wsUrl); // Debug log
     

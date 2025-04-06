@@ -19,7 +19,7 @@ import { WebSocketServer, WebSocket } from "ws";
 // Store connected WebSocket clients
 const clients: WebSocket[] = [];
 
-// Function to broadcast queue updates to all connected clients
+// Function to broadcast queue updates to all connected clients with enhanced production reliability
 function broadcastQueueUpdate() {
   const message = JSON.stringify({
     type: "QUEUE_UPDATE",
@@ -32,7 +32,10 @@ function broadcastQueueUpdate() {
   let connectedCount = 0;
   let disconnectedCount = 0;
   
-  // Send to all connected clients with proper error handling
+  // Track clients that need to be removed (for Render production environment)
+  const clientsToRemove: number[] = [];
+  
+  // Send to all connected clients with enhanced error handling for production
   clients.forEach((client, index) => {
     try {
       // Only send to clients that are in OPEN state
@@ -40,15 +43,25 @@ function broadcastQueueUpdate() {
         client.send(message);
         connectedCount++;
       } else if (client.readyState === WebSocket.CLOSED || client.readyState === WebSocket.CLOSING) {
-        // Mark closed clients for potential cleanup
+        // Mark closed clients for cleanup
         disconnectedCount++;
+        clientsToRemove.push(index); // Track this client for removal
       }
     } catch (error) {
       console.error(`Error broadcasting to client ${index}:`, error);
       // If an error occurs during send, we should consider this client disconnected
       disconnectedCount++;
+      clientsToRemove.push(index); // Track this client for removal due to error
     }
   });
+  
+  // Remove clients that failed (in reverse order to avoid index shifting)
+  if (clientsToRemove.length > 0) {
+    for (let i = clientsToRemove.length - 1; i >= 0; i--) {
+      clients.splice(clientsToRemove[i], 1);
+    }
+    console.log(`Cleaned up ${clientsToRemove.length} disconnected clients during broadcast`);
+  }
   
   console.log(`Broadcast complete: ${connectedCount} connected, ${disconnectedCount} disconnected`);
   
@@ -510,7 +523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   
-  // Initialize WebSocket server with enhanced configuration
+  // Initialize WebSocket server with enhanced configuration for Render compatibility
   const wss = new WebSocketServer({ 
     server: httpServer, 
     path: '/ws',
@@ -518,9 +531,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Handle CORS for WebSocket connections
     verifyClient: (info, callback) => {
       // Allow all connections in our case
-      // You can implement custom verification logic here if needed
+      // This is especially important for Render deployments
       callback(true);
     }
+    // Remove handleProtocols as it's causing type issues and not necessary
   });
   
   // Track WebSocket connections and their status
