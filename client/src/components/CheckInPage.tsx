@@ -31,9 +31,9 @@ export default function CheckInPage() {
     mutationFn: (data: QueueFormData) => queueService.addToQueue(data),
     onSuccess: (data) => {
       toast({
-        title: "Check-in successful",
-        description: `Added ${data.name} to queue`,
-        duration: 2000, // 2 seconds
+        title: "Added to queue",
+        description: null,
+        duration: 1000, // 1 second
       });
       form.reset({
         name: "",
@@ -46,9 +46,10 @@ export default function CheckInPage() {
     onError: (error) => {
       toast({
         title: "Check-in failed",
+        // Still keep error message as it's important for the user to know what went wrong
         description: error instanceof Error ? error.message : "Please try again",
         variant: "destructive",
-        duration: 2000, // 2 seconds
+        duration: 1500, // Slightly longer for errors to read
       });
     },
   });

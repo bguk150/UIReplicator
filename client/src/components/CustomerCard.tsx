@@ -27,17 +27,17 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
       queryClient.invalidateQueries({ queryKey: ['/api/queue'] });
       queryClient.invalidateQueries({ queryKey: ['/api/queue/stats'] });
       toast({
-        title: "Payment verified",
-        description: `Cash verified for ${customer.name}`,
-        duration: 2000, // 2 seconds
+        title: "Cash Verified",
+        description: null, // No description for cleaner notification
+        duration: 1000, // 1 second
       });
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to verify payment",
+        description: null,
         variant: "destructive",
-        duration: 2000, // 2 seconds
+        duration: 1000, // 1 second
       });
     },
   });
@@ -62,16 +62,16 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
       queryClient.invalidateQueries({ queryKey: ['/api/queue/stats'] });
       toast({
         title: "Served",
-        description: `${customer.name} marked as served`,
-        duration: 2000, // 2 seconds
+        description: null,
+        duration: 1000, // 1 second
       });
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to mark as served",
+        description: null,
         variant: "destructive",
-        duration: 2000, // 2 seconds
+        duration: 1000, // 1 second
       });
     },
   });

@@ -32,17 +32,17 @@ export function useSmsNotification() {
         const result = await smsService.sendAlmostDoneNotification(queueItem);
         toast({
           title: "SMS Sent",
-          description: `Notification sent to ${queueItem.name}`,
+          description: null, // No description for cleaner notification
           variant: "default",
-          duration: 2000 // 2 seconds
+          duration: 1000 // 1 second
         });
         return result;
       } catch (error) {
         toast({
           title: "SMS Failed",
-          description: "Please try again",
+          description: null, // No description for cleaner notification
           variant: "destructive",
-          duration: 2000 // 2 seconds
+          duration: 1000 // 1 second
         });
         return null;
       }
