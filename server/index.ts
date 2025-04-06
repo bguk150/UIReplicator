@@ -111,7 +111,7 @@ app.use((req, res, next) => {
 })();
 
 // Assuming WebSocketServer is imported correctly (e.g., from 'ws')
-const { WebSocketServer } = require('ws'); // Or adjust import as needed
+import { WebSocketServer } from 'ws';
 
 const wss = new WebSocketServer({ 
     server,
