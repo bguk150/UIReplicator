@@ -30,9 +30,9 @@ export const insertQueueSchema = createInsertSchema(queue)
 // Extended Queue Schema with Phone Number Validation
 export const queueFormSchema = insertQueueSchema.extend({
   phone_number: z.string()
-    .min(11, "Phone number must be at least 11 digits")
-    .max(11, "Phone number must not exceed 11 digits")
-    .regex(/^07\d{9}$/, "Please enter a valid UK mobile number (e.g., 07XXXXXXXXX)"),
+    .min(10, "Phone number must be at least 10 digits")
+    .max(15, "Phone number must not exceed 15 characters")
+    .regex(/^\+?44\s?7\d{1,}/, "Please use international format (+44 7XX XXXXXXX)"),
 });
 
 // Login Schema

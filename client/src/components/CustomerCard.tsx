@@ -28,16 +28,16 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
       queryClient.invalidateQueries({ queryKey: ['/api/queue/stats'] });
       toast({
         title: "Payment verified",
-        description: `Cash payment verified for ${customer.name}`,
-        duration: 10000, // 10 seconds
+        description: `Cash verified for ${customer.name}`,
+        duration: 2000, // 2 seconds
       });
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to verify payment",
+        description: "Failed to verify payment",
         variant: "destructive",
-        duration: 10000, // 10 seconds
+        duration: 2000, // 2 seconds
       });
     },
   });
@@ -61,17 +61,17 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
       queryClient.invalidateQueries({ queryKey: ['/api/queue'] });
       queryClient.invalidateQueries({ queryKey: ['/api/queue/stats'] });
       toast({
-        title: "Customer served",
-        description: `${customer.name} has been marked as served`,
-        duration: 10000, // 10 seconds
+        title: "Served",
+        description: `${customer.name} marked as served`,
+        duration: 2000, // 2 seconds
       });
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to mark as served",
+        description: "Failed to mark as served",
         variant: "destructive",
-        duration: 10000, // 10 seconds
+        duration: 2000, // 2 seconds
       });
     },
   });
@@ -105,7 +105,15 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
           <div className="mb-2 text-gray-300">{customer.service_type}</div>
           <div className="text-gray-300 flex items-center">
             <Phone className="h-4 w-4 mr-2 text-gray-400" />
-            {customer.phone_number}
+            {/* Format phone number to always display with +44 format */}
+            {customer.phone_number.startsWith('+') 
+              ? customer.phone_number 
+              : customer.phone_number.startsWith('44')
+                ? `+${customer.phone_number}`
+                : customer.phone_number.startsWith('07')
+                  ? `+44${customer.phone_number.substring(1)}`
+                  : `+44${customer.phone_number}`
+            }
           </div>
         </div>
         
