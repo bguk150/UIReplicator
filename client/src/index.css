@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-[#1A1F2C] text-white;
+  }
+
+  :root {
+    --background: 222 27% 14%;
+    --foreground: 0 0% 100%;
+    
+    --card: 222 27% 18%;
+    --card-foreground: 0 0% 100%;
+    
+    --popover: 222 27% 18%;
+    --popover-foreground: 0 0% 100%;
+    
+    --primary: 200 23% 40%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 260 21% 56%;
+    --secondary-foreground: 0 0% 100%;
+    
+    --muted: 223 13% 25%;
+    --muted-foreground: 217 13% 83%;
+    
+    --accent: 200 23% 40%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 223 10% 24%;
+    --input: 223 10% 24%;
+    --ring: 200 23% 40%;
+    
+    --radius: 0.5rem;
+  }
+}
+
+/* Custom Classes */
+.gradient-card {
+  background: linear-gradient(145deg, rgba(76, 109, 124, 0.1), rgba(26, 31, 44, 0.3));
+  @apply border border-gray-800;
+}
+
+.gradient-header {
+  background: linear-gradient(90deg, rgba(76, 109, 124, 0.3), rgba(126, 112, 175, 0.3));
+}
+
+.btn-yellow {
+  background-color: #FEC6A1;
+  color: #1A1F2C;
+}
+
+.btn-green {
+  background-color: #C2F2C3;
+  color: #1A1F2C;
+}
+
+.btn-blue {
+  background-color: #D3E4FD;
+  color: #1A1F2C;
+}
