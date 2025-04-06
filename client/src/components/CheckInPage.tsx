@@ -134,6 +134,10 @@ export default function CheckInPage() {
                       <SelectItem value="Haircut & Beard">Haircut & Beard</SelectItem>
                       <SelectItem value="Traditional Shave">Traditional Shave</SelectItem>
                       <SelectItem value="Kids Haircut">Kids Haircut</SelectItem>
+                      <SelectItem value="Skin Fade">Skin Fade</SelectItem>
+                      <SelectItem value="Hot Towel Shave">Hot Towel Shave</SelectItem>
+                      <SelectItem value="Head Shave">Head Shave</SelectItem>
+                      <SelectItem value="Facial">Facial</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
