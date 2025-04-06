@@ -82,7 +82,7 @@ app.use((req, res, next) => {
 
   // Initialize WebSocket server after HTTP server is created
   const wss = new WebSocketServer({ 
-    server,
+    noServer: true, // Detaches WebSocket from HTTP server
     verifyClient: (info, callback) => {
       const cookie = info.req.headers.cookie;
       if (!cookie) {
@@ -99,6 +99,30 @@ app.use((req, res, next) => {
       log("WebSocket client disconnected");
     });
   });
+
+  server.on("upgrade", (request, socket, head) => {
+    const verifyClient = (info: any, cb: any) => {
+      const cookie = info.req.headers.cookie;
+      if (!cookie) {
+        cb(false, 401, 'Unauthorized');
+        return;
+      }
+      cb(true);
+    };
+
+    verifyClient(request, (result: boolean) => {
+      if (!result) {
+        socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+        socket.destroy();
+        return;
+      }
+
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit("connection", ws, request);
+      });
+    });
+  });
+
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
