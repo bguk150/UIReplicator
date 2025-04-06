@@ -103,18 +103,7 @@ app.use((req, res, next) => {
   // Initialize WebSocket server after HTTP server is created
   const wss = new WebSocketServer({ 
     noServer: true, // Detaches WebSocket from HTTP server
-    verifyClient: (info, callback) => {
-      if (!info.req || !info.req.headers) {
-        callback(false, 401, 'Invalid request');
-        return;
-      }
-      const cookie = info.req.headers.cookie;
-      if (!cookie) {
-        callback(false, 401, 'Unauthorized');
-        return;
-      }
-      callback(true);
-    }
+    // We'll handle verification in the upgrade event instead
   });
 
   wss.on("connection", (ws) => {
@@ -125,25 +114,18 @@ app.use((req, res, next) => {
   });
 
   server.on("upgrade", (request, socket, head) => {
-    const verifyClient = (info: any, cb: any) => {
-      const cookie = info.req.headers.cookie;
-      if (!cookie) {
-        cb(false, 401, 'Unauthorized');
-        return;
-      }
-      cb(true);
-    };
-
-    verifyClient(request, (result: boolean) => {
-      if (!result) {
-        socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-        socket.destroy();
-        return;
-      }
-
-      wss.handleUpgrade(request, socket, head, (ws) => {
-        wss.emit("connection", ws, request);
-      });
+    // The request object is already the HTTP request, not an info object
+    const cookie = request.headers.cookie;
+    
+    if (!cookie) {
+      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+      socket.destroy();
+      return;
+    }
+    
+    // If we reach here, the client is authorized
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit("connection", ws, request);
     });
   });
 
