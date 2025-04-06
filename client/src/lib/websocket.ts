@@ -22,9 +22,15 @@ class WebSocketManager {
       try {
         this.socket.close();
       } catch (err) {
-        // Ignore errors on close
+        console.error('Error closing socket:', err);
       }
       this.socket = null;
+    }
+
+    // Reset connection attempts on manual reconnect
+    if (isManualReconnect) {
+      console.log('Manual reconnect triggered');
+      this.connectionAttempts = 0;
     }
 
     // Reset connection attempts on manual reconnect

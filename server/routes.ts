@@ -386,10 +386,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
   // Initialize WebSocket server
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  const wss = new WebSocketServer({ 
+    server: httpServer, 
+    path: '/ws',
+    clientTracking: true
+  });
   
   wss.on('connection', (ws, req) => {
     console.log('WebSocket client connected');
+    
+    // Send initial connection success message
+    ws.send(JSON.stringify({ type: 'CONNECTED', timestamp: new Date().toISOString() }));
     
     // Handle authentication message
     ws.on('message', (data) => {
@@ -397,6 +404,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const message = JSON.parse(data.toString());
         if (message.type === 'AUTH' && message.token) {
           console.log('WebSocket client authenticated');
+          // Send initial queue state
+          broadcastQueueUpdate();
         }
       } catch (error) {
         console.error('WebSocket message error:', error);
