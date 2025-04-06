@@ -47,7 +47,10 @@ export default function BarberDashboard() {
   } = useQuery<Queue[]>({
     queryKey: ['/api/queue', refreshKey],
     refetchInterval: wsConnected ? false : 30000, // Only poll if WebSocket is down
+    staleTime: 10000, // Keep data fresh for at least 10 seconds
     initialData: [], // Default empty array to avoid type errors
+    retry: 3, // Retry failed requests 3 times
+    refetchOnWindowFocus: true, // Refresh when user focuses the window
   });
   
   // Query for queue stats
@@ -58,7 +61,10 @@ export default function BarberDashboard() {
   } = useQuery<{ waiting: number, almostDone: number, total: number }>({
     queryKey: ['/api/queue/stats', refreshKey],
     refetchInterval: wsConnected ? false : 30000, // Only poll if WebSocket is down
+    staleTime: 10000, // Keep data fresh for at least 10 seconds
     initialData: { waiting: 0, almostDone: 0, total: 0 }, // Default values
+    retry: 3, // Retry failed requests 3 times
+    refetchOnWindowFocus: true, // Refresh when user focuses the window
   });
   
   // Handle manual refresh

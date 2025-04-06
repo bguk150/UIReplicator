@@ -17,9 +17,33 @@ class WebSocketManager {
   connect(isManualReconnect = false) {
     if (this.socket?.readyState === WebSocket.OPEN) return;
     
+    // Close any existing socket that's in a bad state
+    if (this.socket) {
+      try {
+        this.socket.close();
+      } catch (err) {
+        // Ignore errors on close
+      }
+      this.socket = null;
+    }
+    
     // Reset connection attempts if manually reconnecting
     if (isManualReconnect) {
       this.connectionAttempts = 0;
+    }
+    
+    // Clear any pending reconnection timer
+    if (this.reconnectTimer !== null) {
+      window.clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+    
+    // Check max attempts
+    if (this.connectionAttempts >= this.maxReconnectAttempts) {
+      console.log("Max reconnection attempts reached. Using HTTP fallback.");
+      // Force refresh data through HTTP as fallback
+      this.refreshQueueData();
+      return;
     }
     
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -35,6 +59,8 @@ class WebSocketManager {
     } catch (error) {
       console.error("Failed to create WebSocket connection:", error);
       this.scheduleReconnect();
+      // Force refresh data through HTTP as fallback
+      this.refreshQueueData();
     }
   }
   
@@ -143,23 +169,42 @@ export const webSocketManager = new WebSocketManager();
 
 // React hook to use WebSocket in components
 export function useQueueUpdates(callback?: Listener) {
+  const callbackRef = useRef(callback);
+  
+  // Update ref whenever callback changes
+  useEffect(() => {
+    callbackRef.current = callback;
+  }, [callback]);
+
   // Connect to WebSocket when component mounts
   useEffect(() => {
+    // Initial connection
     webSocketManager.connect();
     
-    // Subscribe to updates if a callback is provided
-    let unsubscribe: Unsubscribe | undefined;
-    if (callback) {
-      unsubscribe = webSocketManager.subscribe(callback);
-    }
+    // Force an initial data refresh
+    webSocketManager.refreshQueueData();
+    
+    // Initial polling setup
+    const periodicRefresh = setInterval(() => {
+      // This will only be used as a fallback if WebSocket is not connected
+      if (webSocketManager.socket?.readyState !== WebSocket.OPEN) {
+        webSocketManager.refreshQueueData();
+      }
+    }, 60000); // Every 60 seconds as an emergency backup
+    
+    // Subscribe to updates
+    const unsubscribe = webSocketManager.subscribe(() => {
+      if (callbackRef.current) {
+        callbackRef.current();
+      }
+    });
     
     // Cleanup on unmount
     return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
+      clearInterval(periodicRefresh);
+      unsubscribe();
     };
-  }, [callback]);
+  }, []);
   
   // Return the websocket manager for manual operations
   return webSocketManager;

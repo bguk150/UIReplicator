@@ -46,9 +46,20 @@ export class DatabaseStorage implements IStorage {
   // Queue methods
   async getAllQueueItems(): Promise<Queue[]> {
     // Return all active queue items (not served)
-    return db.select().from(queue)
-      .where(ne(queue.status, "Served"))
-      .orderBy(asc(queue.check_in_time));
+    try {
+      // Log the query attempt
+      console.log("Fetching all active queue items from database");
+      
+      const items = await db.select().from(queue)
+        .where(ne(queue.status, "Served"))
+        .orderBy(asc(queue.check_in_time));
+      
+      console.log(`Retrieved ${items.length} active queue items`);
+      return items;
+    } catch (error) {
+      console.error("Error fetching queue items:", error);
+      return []; // Return empty array on error rather than crashing
+    }
   }
 
   async getQueueByStatus(status: string): Promise<Queue[]> {

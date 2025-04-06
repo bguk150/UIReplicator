@@ -228,9 +228,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all queue items (only for authenticated barbers)
   app.get('/api/queue', isAuthenticated, async (req, res) => {
     try {
+      console.log("GET /api/queue: Fetching active queue items");
       const queueItems = await storage.getAllQueueItems();
+      
+      console.log(`GET /api/queue: Returning ${queueItems.length} queue items`);
+      
+      // Log a sample of what we're returning (first item if exists)
+      if (queueItems.length > 0) {
+        console.log(`Sample item: ID=${queueItems[0].id}, Name=${queueItems[0].name}, Status=${queueItems[0].status}`);
+      }
+      
       return res.status(200).json(queueItems);
     } catch (error) {
+      console.error("GET /api/queue error:", error);
       return res.status(500).json({ message: "Failed to fetch queue" });
     }
   });
