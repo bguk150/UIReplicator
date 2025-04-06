@@ -1,0 +1,35 @@
+Sure! Here's a simple breakdown of your project:
+
+**Goal:**  
+Create a smart queue management system for a barbershop called **"Beyond Grooming"**. This system helps manage walk-in customers, allowing them to check-in digitally, pay a deposit, and get an SMS when it's their turn.
+
+### Key Features:
+
+1. **Customer Check-In Page (for iPad):**
+   - **What it does:** Customers walk into the barbershop, fill out a simple form with their name, phone number, service type (e.g., haircut, beard trim), and payment method (cash or card).
+   - **How it works:** After submitting the form, their details are added to the queue in a **Supabase database**. If they pay a deposit (via card or cash), they’re officially added to the queue.
+
+2. **Barber Dashboard:**
+   - **What it does:** The barber or manager can view all the waiting customers on a real-time dashboard. They can see the customer's name, service, phone number, and payment status.
+   - **Actions for Barber:** 
+     - **Verify Cash Payment:** If the customer pays in cash, the barber can manually mark their payment as verified.
+     - **Almost Done Button:** When the customer is almost ready, the barber can click "Almost Done," which sends a text to the customer, telling them to get ready (using **ClickSend SMS**).
+     - **Mark as Served:** Once the customer has been served, the barber clicks "Mark as Served," and the customer is removed from the queue.
+
+3. **SMS Notification:**
+   - **What it does:** When the "Almost Done" button is clicked, an SMS is automatically sent to the customer, informing them that they are next in line and need to arrive within 15 minutes.
+   - **Message Example:**  
+     _"Hi, it’s Beyond Grooming✂️💈. Just a heads-up – there’s 1 person ahead of you in the queue! You’ve got 15 minutes to arrive and secure your spot in the chair. Don’t lose your deposit – make it on time! See you soon!"_
+
+4. **Payment Methods:**
+   - **Cash Payment:** If the customer pays by cash, the barber manually verifies it. 
+   - **Card Payment:** If the customer pays via card, they are automatically added to the queue without any manual verification.
+
+5. **Security & Access:**
+   - The **Barber Dashboard** is protected by a login, ensuring that only authorized users (the barbers) can access it. 
+   - The **Customer Check-In** page is public, but only accessible when they walk into the shop (it’s set to the shop’s Wi-Fi).
+
+### Final Goal:
+Create a seamless, efficient system where barbers can manage the queue, customers can check in easily, and SMS notifications keep them informed about their turn. The whole thing should work on an iPad, and the customer’s experience should be smooth and quick.
+
+That's the basic idea!

@@ -1,0 +1,96 @@
+Yes — you're **exactly right** ✅
+
+If you make the following changes **consistently across client and server**, it will:
+
+---
+
+## ✅ Fix the Core Problems:
+
+### 🔒 1. **Session Cookie Configuration**
+Ensure your Express session is set up like this:
+
+```ts
+app.use(
+  session({
+    secret: 'yourSecret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production', // only on HTTPS
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // allow cross-origin in prod
+    },
+  })
+);
+```
+
+---
+
+### 🔄 2. **CORS Configuration (Very Important)**
+
+Make sure `cors` is correctly configured so that the browser accepts cookies:
+
+```ts
+app.use(
+  cors({
+    origin: 'https://beyondgrooming.onrender.com', // frontend origin
+    credentials: true, // 👈 send cookies
+  })
+);
+```
+
+---
+
+### 💬 3. **Fetch Calls Must Send Cookies**
+
+Update all your client-side fetch calls like this:
+
+```ts
+await fetch('/api/queue', {
+  method: 'GET',
+  credentials: 'include', // 👈 critical to include cookies
+});
+```
+
+Without this, even if cookies exist, they **won’t be sent** with the request.
+
+---
+
+### 🔌 4. **WebSocket Auth (Optional but Clean)**
+
+If you’re using `ws`, send the session cookie explicitly:
+
+```ts
+const token = document.cookie.split('; ').find(row => row.startsWith('connect.sid=')).split('=')[1];
+
+const socket = new WebSocket(wsUrl, {
+  headers: {
+    Cookie: `connect.sid=${token}`,
+  },
+});
+```
+
+And on the server side (inside `verifyClient`):
+
+```ts
+verifyClient: (info, callback) => {
+  const cookie = info.req.headers.cookie;
+  if (!cookie || !cookie.includes('connect.sid')) {
+    callback(false, 401, 'Unauthorized');
+    return;
+  }
+  callback(true);
+}
+```
+
+---
+
+## ✅ Result
+
+- 👤 Sessions will persist across pages and deployments
+- 🧼 No more `401 Unauthorized` logs
+- 📡 WebSocket will authenticate properly
+- 📊 Dashboard updates in real time
+
+---
+
+Let me know when you’re ready — I can help you **step-by-step implement all 4 of these** securely and quickly.

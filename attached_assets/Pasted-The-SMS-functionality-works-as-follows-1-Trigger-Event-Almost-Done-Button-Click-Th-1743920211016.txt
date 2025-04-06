@@ -1,0 +1,39 @@
+The SMS functionality works as follows:
+
+1. **Trigger Event: "Almost Done" Button Click**
+   - The process begins when the barber clicks the **"Almost Done"** button on the Barber Dashboard.
+   - This button is visible when a customer is checked in and is next in line but hasn’t been marked as "Served."
+
+2. **Update Customer's Status**
+   - When the **"Almost Done"** button is clicked, two things happen:
+     - The **status** of the customer is updated to **"Almost Done"**.
+     - The **sms_sent** flag for that customer is set to **"Yes"**, indicating that the SMS has been triggered.
+
+3. **Prepare the Message**
+   - A message is crafted to notify the customer that they are next in line. The message includes:
+     - The customer's name
+     - Information about the queue status and the time they need to arrive.
+
+   The message content is:
+   ```
+   Hi, it’s Beyond Grooming✂️💈
+
+   Just a heads-up – there’s 1 person ahead of you in the queue! You’ve got 15 minutes to arrive and secure your spot in the chair.
+
+   Don’t lose your deposit – make it on time!
+
+   See you soon!
+   ```
+
+4. **Send the SMS**
+   - The system then uses an SMS service (like ClickSend) to send the prepared message to the customer's phone number.
+   - The message is sent via an API request, using the customer's phone number and the message text.
+
+5. **Confirm SMS Delivery**
+   - After the message is sent, the system confirms that the SMS has been successfully sent. If the SMS is sent successfully, the **sms_sent** field in the database is updated to **"Yes"**.
+   
+6. **User Experience**
+   - The customer receives the SMS on their phone, informing them of their position in the queue and the time they have to arrive.
+   - This reduces the need for barbers to manually notify customers and helps streamline the queue process. 
+
+In summary, when the **"Almost Done"** button is clicked, the customer receives the message with all relevant queue details, making the process more automated and efficient.

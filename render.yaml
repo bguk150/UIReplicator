@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: beyond-grooming
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: CLICKSEND_USERNAME
+        sync: false
+      - key: CLICKSEND_API_KEY
+        sync: false
