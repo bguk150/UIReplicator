@@ -8,6 +8,8 @@ export const queue = pgTable("queue", {
   name: text("name").notNull(),
   phone_number: varchar("phone_number", { length: 20 }).notNull(),
   service_type: text("service_type").notNull(),
+  service_price: text("service_price").default(""),
+  service_category: text("service_category").default(""),
   payment_method: text("payment_method").notNull(),
   check_in_time: timestamp("check_in_time").defaultNow().notNull(),
   status: text("status").default("Waiting").notNull(),
@@ -33,6 +35,8 @@ export const queueFormSchema = insertQueueSchema.extend({
     .min(10, "Phone number must be at least 10 digits")
     .max(15, "Phone number must not exceed 15 characters")
     .regex(/^(07\d{9}|7\d{9})$/, "Please enter a valid UK mobile number (e.g., 7XXXXXXXXX)"),
+  service_price: z.string().min(1, "Service price is required"),
+  service_category: z.string().min(1, "Service category is required"),
 });
 
 // Login Schema

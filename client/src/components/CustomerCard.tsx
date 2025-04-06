@@ -5,7 +5,7 @@ import { queueService } from "@/lib/supabase";
 import { useSmsNotification } from "@/lib/sms";
 import { Queue } from "@shared/schema";
 import { format } from "date-fns";
-import { CreditCard, Check, Clock, Phone, MessageSquare } from "lucide-react";
+import { CreditCard, Check, Clock, Phone, MessageSquare, Scissors } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -102,7 +102,22 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
               </>
             )}
           </div>
-          <div className="mb-2 text-gray-300">{customer.service_type}</div>
+          <div className="mb-2 flex flex-col">
+            <div className="flex items-center">
+              <Scissors className="h-4 w-4 mr-2 text-gray-400" />
+              <span className="text-gray-300">{customer.service_type}</span>
+              {customer.service_price && (
+                <Badge variant="outline" className="ml-2 text-secondary bg-gray-800">
+                  {customer.service_price}
+                </Badge>
+              )}
+            </div>
+            {customer.service_category && (
+              <div className="text-xs text-gray-400 ml-6 mt-1">
+                Category: {customer.service_category}
+              </div>
+            )}
+          </div>
           <div className="text-gray-300 flex items-center">
             <Phone className="h-4 w-4 mr-2 text-gray-400" />
             {/* Display original phone number format */}

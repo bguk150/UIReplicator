@@ -1,20 +1,35 @@
-import { User, Phone, Scissors, CreditCard } from "lucide-react";
+import { User, Phone, Scissors, CreditCard, Clock, Info } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { QueueFormData, queueFormSchema } from "@shared/schema";
 import { queueService } from "@/lib/supabase";
+import { serviceMenu, getServicePriceByName, getServiceCategoryByName } from "@/lib/serviceData";
 
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Select, 
+  SelectContent, 
+  SelectGroup,
+  SelectItem, 
+  SelectLabel,
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { Container, HeaderIcon, PageContainer } from "@/components/ui/container";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export default function CheckInPage() {
   const [paymentMethod, setPaymentMethod] = useState<"Cash" | "Card">("Cash");
+  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [servicePrice, setServicePrice] = useState<string | null>(null);
+  const [serviceCategory, setServiceCategory] = useState<string | null>(null);
   const { toast } = useToast();
   
   const form = useForm<QueueFormData>({
@@ -23,9 +38,25 @@ export default function CheckInPage() {
       name: "",
       phone_number: "",
       service_type: "",
+      service_price: "",
+      service_category: "",
       payment_method: "Cash",
     },
   });
+  
+  // Update price and category when service changes
+  useEffect(() => {
+    if (selectedService) {
+      const price = getServicePriceByName(selectedService);
+      const category = getServiceCategoryByName(selectedService);
+      
+      setServicePrice(price);
+      setServiceCategory(category);
+      
+      form.setValue("service_price", price);
+      form.setValue("service_category", category);
+    }
+  }, [selectedService, form]);
   
   const checkInMutation = useMutation({
     mutationFn: (data: QueueFormData) => queueService.addToQueue(data),
@@ -39,9 +70,14 @@ export default function CheckInPage() {
         name: "",
         phone_number: "",
         service_type: "",
+        service_price: "",
+        service_category: "",
         payment_method: "Cash",
       });
       setPaymentMethod("Cash");
+      setSelectedService(null);
+      setServicePrice(null);
+      setServiceCategory(null);
     },
     onError: (error) => {
       toast({
@@ -61,6 +97,11 @@ export default function CheckInPage() {
   function handlePaymentMethodChange(method: "Cash" | "Card") {
     setPaymentMethod(method);
     form.setValue("payment_method", method);
+  }
+  
+  function handleServiceChange(serviceName: string) {
+    setSelectedService(serviceName);
+    form.setValue("service_type", serviceName);
   }
   
   return (
@@ -122,28 +163,67 @@ export default function CheckInPage() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Service Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select 
+                    onValueChange={(value) => handleServiceChange(value)} 
+                    value={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger className="bg-gray-800">
                         <SelectValue placeholder="Select a service" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Haircut">Haircut</SelectItem>
-                      <SelectItem value="Beard Trim">Beard Trim</SelectItem>
-                      <SelectItem value="Haircut & Beard">Haircut & Beard</SelectItem>
-                      <SelectItem value="Traditional Shave">Traditional Shave</SelectItem>
-                      <SelectItem value="Kids Haircut">Kids Haircut</SelectItem>
-                      <SelectItem value="Skin Fade">Skin Fade</SelectItem>
-                      <SelectItem value="Hot Towel Shave">Hot Towel Shave</SelectItem>
-                      <SelectItem value="Head Shave">Head Shave</SelectItem>
-                      <SelectItem value="Facial">Facial</SelectItem>
+                      {serviceMenu.map((category) => (
+                        <SelectGroup key={category.id}>
+                          <SelectLabel className="text-primary font-semibold">{category.name}</SelectLabel>
+                          {category.services.map((service) => (
+                            <SelectItem 
+                              key={service.id} 
+                              value={service.name}
+                              className="flex flex-col items-start py-2"
+                            >
+                              <div className="flex justify-between w-full">
+                                <span>{service.name}</span>
+                                <Badge variant="secondary" className="ml-2">{service.price}</Badge>
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1 flex items-center">
+                                <Clock className="h-3 w-3 mr-1 inline" /> 
+                                <span>{service.duration}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                          <Separator className="my-1" />
+                        </SelectGroup>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            
+            {selectedService && servicePrice && (
+              <div className="rounded-md bg-gray-800 p-3 border border-gray-700">
+                <div className="flex items-center">
+                  <Info className="h-5 w-5 text-secondary mr-2" />
+                  <h3 className="font-medium">Service Details</h3>
+                </div>
+                <div className="mt-2 space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Service:</span>
+                    <span>{selectedService}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Price:</span>
+                    <span className="font-medium text-secondary">{servicePrice}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Category:</span>
+                    <span>{serviceCategory}</span>
+                  </div>
+                </div>
+              </div>
+            )}
             
             <FormField
               control={form.control}
