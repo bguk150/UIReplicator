@@ -12,10 +12,22 @@ if (!process.env.DATABASE_URL) {
 }
 
 console.log('Attempting database connection...');
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const pool = new Pool({ 
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined
+});
 export const db = drizzle({ client: pool, schema });
 
 // Test the connection
 pool.connect()
-  .then(() => console.log('Database connected successfully'))
-  .catch(err => console.error('Database connection error:', err));
+  .then(() => {
+    console.log('Database connected successfully');
+    console.log('Database URL domain:', process.env.DATABASE_URL?.split('@')[1]?.split('/')[0]);
+  })
+  .catch(err => {
+    console.error('Database connection error:', err);
+    // Attempt reconnection after delay in production
+    if (process.env.NODE_ENV === 'production') {
+      setTimeout(() => pool.connect(), 5000);
+    }
+  });
