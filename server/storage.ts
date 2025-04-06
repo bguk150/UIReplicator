@@ -1,4 +1,6 @@
 import { queue, users, type Queue, type InsertQueue, type User, type InsertUser } from "@shared/schema";
+import { db } from "./db";
+import { eq, ne, desc, asc, and } from "drizzle-orm";
 
 // Storage interface with CRUD methods for queue management
 export interface IStorage {
@@ -19,94 +21,86 @@ export interface IStorage {
   getQueueStats(): Promise<{ waiting: number, almostDone: number, total: number }>;
 }
 
-export class MemStorage implements IStorage {
-  private queueItems: Map<number, Queue>;
-  private users: Map<number, User>;
-  private queueCurrentId: number;
-  private userCurrentId: number;
-
+export class DatabaseStorage implements IStorage {
   constructor() {
-    this.queueItems = new Map();
-    this.users = new Map();
-    this.queueCurrentId = 1;
-    this.userCurrentId = 1;
-    
-    // Initialize with default barber account
-    const defaultBarber: InsertUser = {
-      username: "beyondgroominguk@gmail.com",
-      password: "bg_uk123" // In a real app, this would be hashed
-    };
-    this.createUser(defaultBarber);
+    // Initialize with default barber account if it doesn't exist
+    this.initializeDefaultBarber();
+  }
+
+  private async initializeDefaultBarber() {
+    try {
+      const existingUser = await this.getUserByUsername("beyondgroominguk@gmail.com");
+      if (!existingUser) {
+        const defaultBarber: InsertUser = {
+          username: "beyondgroominguk@gmail.com",
+          password: "bg_uk123" // In a real app, this would be hashed
+        };
+        await this.createUser(defaultBarber);
+        console.log("Created default barber account");
+      }
+    } catch (error) {
+      console.error("Failed to initialize default barber:", error);
+    }
   }
 
   // Queue methods
   async getAllQueueItems(): Promise<Queue[]> {
     // Return all active queue items (not served)
-    return Array.from(this.queueItems.values())
-      .filter(item => item.status !== "Served")
-      .sort((a, b) => {
-        // Sort by check-in time (oldest first)
-        const dateA = new Date(a.check_in_time).getTime();
-        const dateB = new Date(b.check_in_time).getTime();
-        return dateA - dateB;
-      });
+    return db.select().from(queue)
+      .where(ne(queue.status, "Served"))
+      .orderBy(asc(queue.check_in_time));
   }
 
   async getQueueByStatus(status: string): Promise<Queue[]> {
-    return Array.from(this.queueItems.values())
-      .filter(item => item.status === status)
-      .sort((a, b) => {
-        const dateA = new Date(a.check_in_time).getTime();
-        const dateB = new Date(b.check_in_time).getTime();
-        return dateA - dateB;
-      });
+    return db.select().from(queue)
+      .where(eq(queue.status, status))
+      .orderBy(asc(queue.check_in_time));
   }
 
   async getQueueItemById(id: number): Promise<Queue | undefined> {
-    return this.queueItems.get(id);
+    const [item] = await db.select().from(queue).where(eq(queue.id, id));
+    return item || undefined;
   }
 
   async insertQueueItem(item: InsertQueue): Promise<Queue> {
-    const id = this.queueCurrentId++;
     const now = new Date();
     
-    const queueItem: Queue = {
+    const [queueItem] = await db.insert(queue).values({
       ...item,
-      id,
       check_in_time: now,
       status: "Waiting",
       payment_verified: item.payment_method === "Card" ? "Yes" : "No", // Card payments are auto-verified
       sms_sent: "No"
-    };
+    }).returning();
     
-    this.queueItems.set(id, queueItem);
     return queueItem;
   }
 
   async updateQueueItem(id: number, updates: Partial<Queue>): Promise<Queue | undefined> {
-    const item = this.queueItems.get(id);
-    if (!item) return undefined;
+    const [updatedItem] = await db.update(queue)
+      .set(updates)
+      .where(eq(queue.id, id))
+      .returning();
     
-    const updatedItem = { ...item, ...updates };
-    this.queueItems.set(id, updatedItem);
-    return updatedItem;
+    return updatedItem || undefined;
   }
 
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username.toLowerCase() === username.toLowerCase(),
-    );
+    const [user] = await db.select().from(users)
+      .where(eq(users.username, username.toLowerCase()));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userCurrentId++;
-    const user: User = { ...insertUser, id, role: "barber" };
-    this.users.set(id, user);
+    const [user] = await db.insert(users)
+      .values({ ...insertUser, role: "barber" })
+      .returning();
     return user;
   }
 
@@ -124,15 +118,17 @@ export class MemStorage implements IStorage {
 
   // Stats methods
   async getQueueStats(): Promise<{ waiting: number, almostDone: number, total: number }> {
-    const allActiveItems = Array.from(this.queueItems.values())
-      .filter(item => item.status !== "Served");
+    const waitingItems = await this.getQueueByStatus("Waiting");
+    const almostDoneItems = await this.getQueueByStatus("Almost Done");
+    const activeItems = await db.select().from(queue)
+      .where(ne(queue.status, "Served"));
     
-    const waiting = allActiveItems.filter(item => item.status === "Waiting").length;
-    const almostDone = allActiveItems.filter(item => item.status === "Almost Done").length;
-    const total = allActiveItems.length;
-    
-    return { waiting, almostDone, total };
+    return {
+      waiting: waitingItems.length,
+      almostDone: almostDoneItems.length,
+      total: activeItems.length
+    };
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

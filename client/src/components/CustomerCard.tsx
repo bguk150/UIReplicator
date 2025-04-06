@@ -28,6 +28,7 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
       toast({
         title: "Payment verified",
         description: `Cash payment verified for ${customer.name}`,
+        duration: 10000, // 10 seconds
       });
     },
     onError: (error) => {
@@ -35,6 +36,7 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to verify payment",
         variant: "destructive",
+        duration: 10000, // 10 seconds
       });
     },
   });
@@ -48,6 +50,7 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
       toast({
         title: "SMS sent",
         description: `Customer ${customer.name} has been notified`,
+        duration: 10000, // 10 seconds
       });
     },
     onError: (error) => {
@@ -55,6 +58,7 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to send SMS",
         variant: "destructive",
+        duration: 10000, // 10 seconds
       });
     },
   });
@@ -68,6 +72,7 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
       toast({
         title: "Customer served",
         description: `${customer.name} has been marked as served`,
+        duration: 10000, // 10 seconds
       });
     },
     onError: (error) => {
@@ -75,6 +80,7 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to mark as served",
         variant: "destructive",
+        duration: 10000, // 10 seconds
       });
     },
   });

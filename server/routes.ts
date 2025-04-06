@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { loginSchema, queueFormSchema } from "@shared/schema";
@@ -7,12 +7,43 @@ import { fromZodError } from "zod-validation-error";
 import session from "express-session";
 import MemoryStore from "memorystore";
 
+// Extend the Express Session interface to include our custom properties
+declare module 'express-session' {
+  interface SessionData {
+    userId?: number;
+    username?: string;
+  }
+}
+import { WebSocketServer, WebSocket } from "ws";
+
+// Store connected WebSocket clients
+const clients: WebSocket[] = [];
+
+// Function to broadcast queue updates to all connected clients
+function broadcastQueueUpdate() {
+  const message = JSON.stringify({
+    type: "QUEUE_UPDATE",
+    timestamp: new Date().toISOString()
+  });
+  
+  clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
+  });
+}
+
 // Function to send SMS using ClickSend API
 async function sendSMS(phoneNumber: string, name: string): Promise<{ success: boolean, message: string }> {
   try {
-    // Base64-encoded API credentials from prompt
-    const credentials = Buffer.from("NkUxQUJFRDEtRTZCRi1GMUJGLUI0RUMtODYzN0YxNzJGMkNE", "base64").toString("utf-8");
-    const [username, apiKey] = credentials.split(":");
+    // Use environment variables for API credentials
+    const username = process.env.CLICKSEND_USERNAME;
+    const apiKey = process.env.CLICKSEND_API_KEY;
+    
+    if (!username || !apiKey) {
+      console.error("Missing ClickSend API credentials");
+      return { success: false, message: "Missing API credentials" };
+    }
     
     const url = "https://rest.clicksend.com/v3/sms/send";
     const message = `Hi ${name}, you're next in line at Beyond Grooming! Please come in now and secure your spot in the chair.`;
@@ -49,6 +80,7 @@ async function sendSMS(phoneNumber: string, name: string): Promise<{ success: bo
     }
     
     const data = await response.json();
+    console.log("SMS sent successfully:", data);
     return { success: true, message: "SMS sent successfully" };
   } catch (error) {
     console.error("Error sending SMS:", error);
@@ -73,7 +105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
   
   // Middleware to check if user is authenticated
-  const isAuthenticated = (req: Request, res: Response, next: Function) => {
+  const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
     if (req.session.userId) {
       next();
     } else {
@@ -136,6 +168,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const data = queueFormSchema.parse(req.body);
       const queueItem = await storage.insertQueueItem(data);
+      
+      // Broadcast update to all connected clients
+      broadcastQueueUpdate();
+      
       return res.status(201).json(queueItem);
     } catch (error) {
       if (error instanceof ZodError) {
@@ -199,6 +235,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Broadcast update to all connected clients
+      broadcastQueueUpdate();
+      
       return res.status(200).json(updatedItem);
     } catch (error) {
       console.error("Error updating queue item:", error);
@@ -225,6 +264,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update payment verification status
       const updatedItem = await storage.updateQueueItem(id, { payment_verified: "Yes" });
       
+      // Broadcast update to all connected clients
+      broadcastQueueUpdate();
+      
       return res.status(200).json(updatedItem);
     } catch (error) {
       return res.status(500).json({ message: "Failed to verify payment" });
@@ -232,5 +274,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // Initialize WebSocket server
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  wss.on('connection', (ws) => {
+    console.log('WebSocket client connected');
+    
+    // Add the client to our clients array
+    clients.push(ws);
+    
+    // Handle client disconnect
+    ws.on('close', () => {
+      console.log('WebSocket client disconnected');
+      const index = clients.indexOf(ws);
+      if (index !== -1) {
+        clients.splice(index, 1);
+      }
+    });
+    
+    // Handle errors
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+    });
+    
+    // Send initial state
+    ws.send(JSON.stringify({ type: 'CONNECTED', timestamp: new Date().toISOString() }));
+  });
+  
   return httpServer;
 }
