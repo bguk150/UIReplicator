@@ -30,6 +30,7 @@ function broadcastQueueUpdate() {
   
   // Track connected and disconnected clients to clean up the array
   let connectedCount = 0;
+  let authenticatedCount = 0;
   let disconnectedCount = 0;
   
   // Track clients that need to be removed (for Render production environment)
@@ -40,8 +41,17 @@ function broadcastQueueUpdate() {
     try {
       // Only send to clients that are in OPEN state
       if (client.readyState === WebSocket.OPEN) {
+        // Check if this client is authenticated (for debugging purposes)
+        const isAuthenticated = (client as any).isAuthenticated === true;
+        
+        // Send message regardless of authentication (authentication is more for tracking)
         client.send(message);
         connectedCount++;
+        
+        // Count authenticated clients for debugging
+        if (isAuthenticated) {
+          authenticatedCount++;
+        }
       } else if (client.readyState === WebSocket.CLOSED || client.readyState === WebSocket.CLOSING) {
         // Mark closed clients for cleanup
         disconnectedCount++;
@@ -54,6 +64,9 @@ function broadcastQueueUpdate() {
       clientsToRemove.push(index); // Track this client for removal due to error
     }
   });
+  
+  // Log the counts for monitoring
+  console.log(`Broadcast statistics: ${connectedCount} connected, ${authenticatedCount} authenticated, ${disconnectedCount} disconnected`);
   
   // Remove clients that failed (in reverse order to avoid index shifting)
   if (clientsToRemove.length > 0) {
@@ -521,103 +534,176 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create HTTP server but don't initialize WebSocket server yet
+  // This ensures the server is fully ready before attaching WebSockets
   const httpServer = createServer(app);
   
-  // Initialize WebSocket server with enhanced configuration for Render compatibility
-  const wss = new WebSocketServer({ 
-    server: httpServer, 
-    path: '/ws',
-    clientTracking: true,
-    // Handle CORS for WebSocket connections
-    verifyClient: (info, callback) => {
-      // Special handling for Render.com production environment
-      // Render uses a proxy system that can sometimes break WebSocket connection upgrades
-      // This ensures all connections are allowed with proper origin handling
+  // Variable to hold the WebSocket server instance
+  let wss: WebSocketServer;
+  
+  // We'll initialize WebSocket server after the HTTP server is ready to listen
+  // This pattern is crucial for Render.com deployments
+  httpServer.on('listening', () => {
+    console.log('HTTP server is now listening, initializing WebSocket server');
+    
+    // Initialize WebSocket server with enhanced configuration for Render compatibility
+    wss = new WebSocketServer({ 
+      server: httpServer, 
+      path: '/ws',
+      clientTracking: true,
+      // Handle CORS for WebSocket connections
+      verifyClient: (info, callback) => {
+        // Special handling for Render.com production environment
+        // Render uses a proxy system that can sometimes break WebSocket connection upgrades
+        
+        // Check for Render's environment variables to enable special handling
+        const isRender = !!process.env.RENDER || !!process.env.RENDER_EXTERNAL_URL;
+        
+        if (isRender) {
+          console.log("Render production environment detected - accepting all WebSocket connections");
+          // In Render production, we accept all connections regardless of origin
+          // This works because their proxy system handles security
+          callback(true);
+          return;
+        }
+        
+        // For non-Render environments, we do standard origin checking
+        const origin = info.origin || "";
+        const requestUrl = new URL((info.req.url || ""), "http://localhost");
+        console.log(`WebSocket connection request from origin: ${origin}, path: ${requestUrl.pathname}`);
+        
+        // Accept all connections in development
+        callback(true);
+      }
+    });
+    
+    console.log('WebSocket server initialized on path: /ws after HTTP server started');
+    
+    // Set up ping/pong heartbeat for connection health
+    const heartbeatInterval = setInterval(() => {
+      wss.clients.forEach((ws) => {
+        if ((ws as any).isAlive === false) {
+          // Terminate dead connections that didn't respond to ping
+          console.log('Terminating inactive WebSocket connection (no pong received)');
+          return ws.terminate();
+        }
+        
+        // Mark as inactive (will be marked active again when pong is received)
+        (ws as any).isAlive = false;
+        // Send ping
+        ws.ping();
+      });
+    }, 30000); // 30 second interval
+    
+    // Clean up the interval when the server closes
+    wss.on('close', () => {
+      console.log('WebSocket server closing, clearing heartbeat interval');
+      clearInterval(heartbeatInterval);
+    });
+    
+    // Handle new WebSocket connections
+    wss.on('connection', (ws, req) => {
+      // Mark new connection as alive for heartbeat system
+      (ws as any).isAlive = true;
       
-      // Check for Render's environment variables to enable special handling
+      // Handle pong messages to keep connection alive
+      ws.on('pong', () => {
+        (ws as any).isAlive = true;
+        console.log('Received pong from client, connection marked as alive');
+      });
+      
+      const clientIP = req.socket.remoteAddress;
+      const clientUrl = req.url;
+      
+      // Enhanced connection logging for debugging Render issues
+      const host = req.headers.host || 'unknown';
+      const origin = req.headers.origin || 'unknown';
       const isRender = !!process.env.RENDER || !!process.env.RENDER_EXTERNAL_URL;
       
+      console.log(`WebSocket client connected from ${clientIP}, URL: ${clientUrl}, Host: ${host}, Origin: ${origin}`);
+      console.log(`Connection environment: ${isRender ? 'Render Production' : (process.env.NODE_ENV === 'production' ? 'Production' : 'Development')}`);
+      
+      // For Render, log detailed cookie information (without exposing values)
       if (isRender) {
-        console.log("Render production environment detected - accepting all WebSocket connections");
-        // In Render production, we accept all connections regardless of origin
-        // This works because their proxy system handles security
-        callback(true);
-        return;
-      }
-      
-      // For non-Render environments, we do standard origin checking
-      const origin = info.origin || "";
-      const requestUrl = new URL((info.req.url || ""), "http://localhost");
-      console.log(`WebSocket connection request from origin: ${origin}, path: ${requestUrl.pathname}`);
-      
-      // Accept all connections in development
-      callback(true);
-    }
-  });
-  
-  // Track WebSocket connections and their status
-  console.log('WebSocket server initialized on path: /ws');
-  
-  wss.on('connection', (ws, req) => {
-    const clientIP = req.socket.remoteAddress;
-    const clientUrl = req.url;
-    console.log(`WebSocket client connected from ${clientIP}, URL: ${clientUrl}`);
-    
-    // Send initial connection success message
-    try {
-      ws.send(JSON.stringify({ 
-        type: 'CONNECTED', 
-        timestamp: new Date().toISOString(),
-        message: 'WebSocket connection established'
-      }));
-    } catch (err) {
-      console.error('Error sending initial connection message:', err);
-    }
-    
-    // Handle authentication message
-    ws.on('message', (data) => {
-      try {
-        const message = JSON.parse(data.toString());
-        console.log('WebSocket message received:', message.type);
-        
-        if (message.type === 'AUTH' && message.token) {
-          console.log('WebSocket client authenticated');
-          // Mark this connection as authenticated if needed
-          
-          // Send initial queue state to the newly authenticated client
-          broadcastQueueUpdate();
-        } else if (message.type === 'PING') {
-          // Handle heartbeat/ping messages
-          ws.send(JSON.stringify({ 
-            type: 'PONG', 
-            timestamp: new Date().toISOString() 
-          }));
+        const cookies = req.headers.cookie;
+        console.log(`Cookies present: ${cookies ? 'Yes' : 'No'}`);
+        if (cookies) {
+          // Log cookie names only
+          const cookieNames = cookies.split(';').map(c => c.trim().split('=')[0]);
+          console.log(`Cookie names: ${cookieNames.join(', ')}`);
         }
-      } catch (error) {
-        console.error('WebSocket message parsing error:', error);
       }
-    });
-    
-    // Add the client to our clients array
-    clients.push(ws);
-    
-    // Handle client disconnect
-    ws.on('close', (code, reason) => {
-      console.log(`WebSocket client disconnected: Code ${code}, Reason: ${reason || 'No reason provided'}`);
-      const index = clients.indexOf(ws);
-      if (index !== -1) {
-        clients.splice(index, 1);
+      
+      // Send initial connection success message
+      try {
+        ws.send(JSON.stringify({ 
+          type: 'CONNECTED', 
+          timestamp: new Date().toISOString(),
+          message: 'WebSocket connection established'
+        }));
+      } catch (err) {
+        console.error('Error sending initial connection message:', err);
       }
+      
+      // Handle incoming messages
+      ws.on('message', (data) => {
+        try {
+          const message = JSON.parse(data.toString());
+          console.log('WebSocket message received:', message.type);
+          
+          if (message.type === 'AUTH' && message.token) {
+            console.log('WebSocket client sent authentication token');
+            
+            // Store auth status on the WebSocket object
+            (ws as any).isAuthenticated = true;
+            
+            // Send confirmation of authentication
+            try {
+              ws.send(JSON.stringify({
+                type: 'AUTH_SUCCESS',
+                timestamp: new Date().toISOString(),
+                message: 'Authentication successful'
+              }));
+              console.log('Authentication confirmation sent to client');
+            } catch (err) {
+              console.error('Error sending authentication confirmation:', err);
+            }
+            
+            // Send initial queue state to the newly authenticated client
+            broadcastQueueUpdate();
+          } else if (message.type === 'PING') {
+            // Handle heartbeat/ping messages
+            ws.send(JSON.stringify({ 
+              type: 'PONG', 
+              timestamp: new Date().toISOString() 
+            }));
+          }
+        } catch (error) {
+          console.error('WebSocket message parsing error:', error);
+        }
+      });
+      
+      // Add the client to our clients array
+      clients.push(ws);
+      
+      // Handle client disconnect
+      ws.on('close', (code, reason) => {
+        console.log(`WebSocket client disconnected: Code ${code}, Reason: ${reason || 'No reason provided'}`);
+        const index = clients.indexOf(ws);
+        if (index !== -1) {
+          clients.splice(index, 1);
+        }
+        console.log(`Total connected clients: ${clients.length}`);
+      });
+      
+      // Handle errors
+      ws.on('error', (error) => {
+        console.error('WebSocket connection error:', error);
+      });
+      
+      // Log the total number of connected clients
       console.log(`Total connected clients: ${clients.length}`);
     });
-    
-    // Handle errors
-    ws.on('error', (error) => {
-      console.error('WebSocket connection error:', error);
-    });
-    
-    // Log the total number of connected clients
-    console.log(`Total connected clients: ${clients.length}`);
   });
   
   return httpServer;

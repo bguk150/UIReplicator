@@ -53,51 +53,54 @@ class WebSocketManager {
       return;
     }
     
-    // Determine WebSocket URL based on current environment
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const host = window.location.host;
-    
-    // Special handling for production environments (especially Render)
-    // This ensures we use the correct domain regardless of Render's specific domain structure
-    const isProduction = window.location.hostname.includes('onrender.com') || 
-                         window.location.hostname.includes('replit.app') ||
-                         window.location.hostname.includes('render.com');
-    
-    // Enhanced logging for production troubleshooting
-    if (isProduction) {
-      console.log('Production environment detected on:', window.location.hostname);
-      console.log('Protocol:', protocol);
-      console.log('Host:', host);
+    // Get WebSocket URL dynamically based on the current environment
+    const getWebSocketUrl = () => {
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const host = window.location.host;
       
-      // For production, add a longer timeout and more reconnection attempts
-      this.maxReconnectAttempts = 12; // Increase for more persistent reconnections
-    }
-    
-    // For Render deployments, use a specialized connection approach
-    // This handles Render's proxy architecture which can sometimes break standard WebSocket connections
-    let wsUrl;
-    
-    if (isProduction) {
-      // Use the complete origin including subdomain for Render environments
-      // This critical fix ensures the WebSocket connects through Render's proxy layer correctly
+      // Enhanced production environment detection
+      const isRender = window.location.hostname.includes('onrender.com');
+      const isReplit = window.location.hostname.includes('replit.app');
+      const isProduction = isRender || isReplit || window.location.hostname.includes('render.com');
       
-      // For Render.com specifically:
-      if (window.location.hostname.includes('onrender.com') || 
-          window.location.hostname.includes('render.com')) {
+      // Enhanced logging for all environments
+      console.log('Current environment:', {
+        hostname: window.location.hostname,
+        isProduction,
+        isRender,
+        isReplit,
+        protocol,
+        host
+      });
+      
+      if (isProduction) {
+        // For production, add a longer timeout and more reconnection attempts
+        this.maxReconnectAttempts = 15; // Increase for more persistent reconnections in production
         
-        // Force WSS for Render's secure environment
-        wsUrl = `wss://${window.location.host}/ws`;
-        console.log('Using Render-optimized WebSocket URL:', wsUrl);
-        
+        if (isRender) {
+          // For Render, always use wss:// protocol and the exact host with explicit /ws path
+          // This is critical for Render's proxy system
+          const renderHost = host;
+          console.log('Using Render-specific WebSocket URL with explicit /ws path');
+          return `wss://${renderHost}/ws`;
+        } else if (isReplit) {
+          // For Replit, use the host with explicit /ws path
+          console.log('Using Replit-specific WebSocket URL');
+          return `${protocol}//${host}/ws`;
+        } else {
+          // For other production environments
+          console.log('Using generic production WebSocket URL');
+          return `${protocol}//${host}/ws`;
+        }
       } else {
-        // Other production environments (Replit, etc)
-        wsUrl = `${protocol}//${window.location.host}/ws`;
-        console.log('Using standard production WebSocket URL:', wsUrl);
+        // Standard development environment
+        console.log('Using development WebSocket URL');
+        return `${protocol}//${host}/ws`;
       }
-    } else {
-      // Standard development environment
-      wsUrl = `${protocol}//${host}/ws`;
-    }
+    };
+    
+    // Get the appropriate WebSocket URL for the current environment
+    const wsUrl = getWebSocketUrl();
     
     console.log('Connecting to WebSocket at:', wsUrl); // Debug log
     
@@ -188,6 +191,15 @@ class WebSocketManager {
           this.connectionAttempts = 0;
           break;
           
+        case "AUTH_SUCCESS":
+          console.log("Authentication successful:", data.message || "Authenticated with server");
+          // Mark connection as authenticated
+          (this.socket as any).isAuthenticated = true;
+          
+          // Force refresh data since we're now authenticated
+          this.refreshQueueData();
+          break;
+          
         case "PONG":
           // Received a pong response from the server (heartbeat response)
           console.log("Heartbeat pong received");
@@ -232,24 +244,36 @@ class WebSocketManager {
     
     this.connectionAttempts++;
     
-    // Check for production environment to adjust retry strategy
-    const isProduction = window.location.hostname.includes('onrender.com') || 
-                        window.location.hostname.includes('replit.app') ||
-                        window.location.hostname.includes('render.com');
+    // Enhanced environment detection for specific handling
+    const isRender = window.location.hostname.includes('onrender.com');
+    const isReplit = window.location.hostname.includes('replit.app');
+    const isProduction = isRender || isReplit || window.location.hostname.includes('render.com');
     
     // For production, we'll use a more aggressive reconnection strategy with more attempts
-    const effectiveMaxAttempts = isProduction ? 
-      this.maxReconnectAttempts + 3 : // Give more chances in production
-      this.maxReconnectAttempts;
+    // Render needs special handling for its proxy system
+    const effectiveMaxAttempts = isRender ? 
+      this.maxReconnectAttempts + 5 : // Give extra chances specifically for Render
+      (isProduction ? this.maxReconnectAttempts + 3 : this.maxReconnectAttempts);
     
     if (this.connectionAttempts <= effectiveMaxAttempts) {
       // Exponential backoff with a maximum delay, but faster initial retries for production
       // This helps get through Render's proxy system which might temporarily break connections
       let delay;
       
-      if (isProduction) {
-        // For production: faster initial reconnects with a different backoff strategy
-        // First 3 attempts very quick (500ms, 1000ms, 2000ms), then slower exponential backoff
+      if (isRender) {
+        // For Render: extremely aggressive reconnect strategy with very quick initial attempts
+        // This helps overcome Render proxy issues with WebSockets
+        if (this.connectionAttempts <= 5) {
+          // First 5 attempts at 300ms, 600ms, 900ms, 1200ms, 1500ms
+          delay = 300 * this.connectionAttempts;
+          console.log(`Render-specific rapid reconnect scheduled in ${delay}ms (attempt ${this.connectionAttempts}/${effectiveMaxAttempts})`);
+        } else {
+          // Then slower exponential backoff
+          delay = Math.min(800 * Math.pow(1.3, this.connectionAttempts - 5), 30000);
+          console.log(`Render reconnect scheduled in ${delay}ms (attempt ${this.connectionAttempts}/${effectiveMaxAttempts})`);
+        }
+      } else if (isProduction) {
+        // For other production environments: still faster than dev but not as aggressive as Render
         if (this.connectionAttempts <= 3) {
           delay = 500 * this.connectionAttempts;
         } else {
@@ -265,9 +289,25 @@ class WebSocketManager {
       this.reconnectTimer = window.setTimeout(() => {
         this.reconnectTimer = null;
         
-        // On production, try a full page reload after numerous failed attempts
-        // This can help if the issue is related to stale client-side state
-        if (isProduction && this.connectionAttempts > 8) {
+        // On Render, try a more aggressive approach after multiple failures
+        if (isRender && this.connectionAttempts > 6) {
+          console.log('Multiple reconnection attempts failed in Render environment');
+          console.log('Attempting HTTP fallback and special Render reconnection strategy');
+          
+          // Force refresh data through HTTP first
+          this.refreshQueueData();
+          
+          // Wait a bit longer before the next connection attempt on Render
+          // This gives time for HTTP connections to establish and potentially 
+          // "warm up" the connection between client and server
+          setTimeout(() => {
+            // For Render, explicitly try to reconnect with full retry reset
+            this.connectionAttempts = 0;
+            this.connect(true);
+          }, 1500);
+        } 
+        // On other production environments, try a full page reload after numerous failed attempts
+        else if (isProduction && this.connectionAttempts > 8) {
           console.log('Multiple reconnection attempts failed in production environment');
           console.log('Attempting HTTP fallback for data refresh');
           
@@ -286,6 +326,16 @@ class WebSocketManager {
       
       // Even after giving up on reconnecting, still refresh data periodically via HTTP
       this.refreshQueueData();
+      
+      // For Render, make one last attempt after a longer wait
+      // Sometimes Render's proxy needs more time to reset connections
+      if (isRender) {
+        console.log('Scheduling one final reconnection attempt for Render after a longer delay');
+        setTimeout(() => {
+          this.connectionAttempts = 0; // Reset counter
+          this.connect(true); // Try one more time with a clean slate
+        }, 10000); // Wait 10 seconds
+      }
     }
   }
   

@@ -1,0 +1,172 @@
+Thanks for confirming — since **everything works perfectly in Replit**, but the **live Render dashboard still isn't showing the customer queue**, even **after testing in private mode and re-logging**, that narrows it down to a **server-side or WebSocket-related issue in the production environment**.
+
+---
+
+## ✅ Here's a Summary of What We've Confirmed:
+
+| Area                     | Status        | Working in Replit | Working in Render |
+|--------------------------|---------------|--------------------|--------------------|
+| App build & deployment  | ✅ Successful | ✅ Yes              | ✅ Yes              |
+| Login                   | ✅ Works       | ✅ Yes              | ✅ Yes              |
+| Neon database connection| ✅ Confirmed   | ✅ Yes              | ✅ Yes              |
+| WebSocket connection    | ⚠️ Fails in prod | ✅ Yes              | ❌ No (Code 1006)  |
+| Dashboard shows data    | ✅ Yes (Replit) | ✅ Yes              | ❌ No              |
+
+---
+
+## 🚨 Root Cause: **WebSocket Connection Not Persisting in Production**
+
+> **WebSocket Error Code 1006** = _Abnormal closure_ → usually means:
+- Handshake failed due to CORS or wrong `Origin`
+- Render is dropping connection due to missing `ping/pong`
+- Session cookie is not sent in WebSocket request
+- WS server didn't properly attach to Express
+
+---
+
+## ✅ Final Checklist Before Touching Code:
+
+Please confirm the **following are ALL true on Render**:
+
+### 1. ✅ `RENDER_EXTERNAL_HOSTNAME` is set (or correctly inferred)
+```env
+RENDER_EXTERNAL_HOSTNAME=uireplicator.onrender.com
+```
+
+### 2. ✅ `NODE_ENV=production` is set  
+You’ve already done this — good.
+
+---
+
+## 🧪 Now, here’s how to **verify where exactly the failure is happening:**
+
+### 🔍 Step 1: Open DevTools → Network Tab → Filter: `WS`
+
+- Check if `wss://uireplicator.onrender.com` is being **called**
+- See the **status** (should be `101 Switching Protocols`)
+- If you see `failed` or `pending`, click it → look under:
+  - **Headers → Request**: Check if cookies/session are attached
+  - **Response → Console log**: Any CORS issues?
+
+---
+
+## ✅ Debugging Fixes (To Be Done Only If You Approve)
+
+Let me break this into **two safe optional fix paths** you can choose to apply:
+
+---
+
+### ✅ Fix A: Attach WebSocket Server *After* Express Server is Ready
+
+This ensures Render’s internal reverse proxy **doesn’t drop the WebSocket** due to timing.
+
+#### 🔧 In `server/index.ts`:
+Make sure you do this **order**:
+
+```ts
+const server = app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+const wss = new WebSocketServer({ server });
+
+wss.on("connection", (socket) => {
+  console.log("WebSocket connection established");
+
+  // Your message handlers...
+});
+```
+
+✅ Confirm `wss` is using `{ server }` and not raw port or app.
+
+---
+
+### ✅ Fix B: Handle WebSocket `ping/pong` heartbeats in production
+
+Some platforms like Render **close idle WS connections**.
+
+#### 🛠️ Add this inside `wss.on("connection")` block:
+```ts
+socket.isAlive = true;
+
+socket.on("pong", () => {
+  socket.isAlive = true;
+});
+
+const interval = setInterval(() => {
+  wss.clients.forEach((ws) => {
+    if (!ws.isAlive) return ws.terminate();
+
+    ws.isAlive = false;
+    ws.ping();
+  });
+}, 30000);
+
+wss.on("close", () => {
+  clearInterval(interval);
+});
+```
+
+✅ This keeps the connection alive with a 30s heartbeat ping.
+
+---
+
+## 📦 Bonus: Fix WebSocket URL Detection in Frontend
+
+In `BarberDashboard.jsx` or wherever you're connecting WebSockets:
+
+```js
+const getWebSocketUrl = () => {
+  if (import.meta.env.PROD) {
+    return `wss://${window.location.host}`;
+  } else {
+    return "ws://localhost:3001";
+  }
+};
+const socket = new WebSocket(getWebSocketUrl());
+```
+
+✅ This ensures the client points to the **correct host dynamically**.
+
+---
+
+## ✅ Final Step: Confirm Express Session is Attached to WebSocket
+
+Sessions don’t work over WS unless cookies are passed.
+
+Make sure in your session setup you have:
+
+```ts
+cookie: {
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'none',
+  httpOnly: true,
+}
+```
+
+And that your WebSocket path **doesn't conflict** (like using `/socket`).
+
+---
+
+## 🔧 Summary — What To Fix:
+
+| Fix                        | Status    |
+|-----------------------------|-----------|
+| Attach WebSocket after Express `listen()` | ✅ Do this |
+| Add `ping/pong` for WebSocket | ✅ Do this |
+| Use dynamic `wss://` URL on frontend | ✅ Do this |
+| Verify Render session cookies working | ✅ Confirm |
+| WebSocket response: 101 Switching Protocols? | 🧪 Check |
+
+---
+
+## 🚀 Want Me to Write the Code Changes?
+
+If you give me a ✅, I’ll generate all the exact file updates you can paste and push in Replit → GitHub → Render.
+
+Let me know if you'd like:
+- [ ] Just backend changes
+- [ ] Both backend and frontend WebSocket fix
+- [ ] Final `git push` checklist
+
+Or if you want to **deploy to Fly.io instead**, I’ll switch and guide you instantly.

@@ -111,7 +111,7 @@ app.use((req, res, next) => {
   // We're already setting up WebSocket server in routes.ts, 
   // so we don't need to create another one here.
   // The WebSocket server in routes.ts is using the same HTTP server instance.
-
+  // The WebSocket server is initialized after the HTTP server is listening.
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
