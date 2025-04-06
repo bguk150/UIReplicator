@@ -1,0 +1,102 @@
+Perfect — this log screenshot finally **pinpoints the root issue**:
+
+---
+
+## 🚨 The Real Issue: **401 Unauthorized on `/api/queue` and `/api/queue/stats`**
+
+You're seeing repeated errors like:
+```
+GET /api/queue 401 in 1ms :: {"message":"Unauthorized"}
+```
+
+### 💡 This means:
+- The dashboard is polling `GET /api/queue` and/or `/api/queue/stats` ✅
+- BUT... the request is **unauthorized**, so the backend returns an empty result or error ❌
+- That’s why no customers appear on the dashboard — your server **refuses to send data** to unauthenticated users
+
+---
+
+## 🔍 Why it worked on Replit but fails on Render:
+Replit was likely preserving the login session (`connect.sid` cookie) properly.
+
+On **Render**, one of the following might be happening:
+- Cookies are not being sent properly from the frontend to the backend
+- You switched to HTTPS → SameSite/secure cookies misconfigured
+- The API expects an auth session but your deployed version **forgets** to include it
+
+---
+
+## ✅ Confirm It’s a Cookie/Auth Issue:
+In Chrome DevTools:
+1. Go to the **Application tab** > Cookies > `beyondgrooming.onrender.com`
+2. Look for the `connect.sid` cookie
+3. Is it there? Is `Secure` and `SameSite` set to strict?
+4. Open **Network tab** → see if `/api/queue` request **sends cookies** under `Request Headers`
+
+---
+
+## ✅ Recommended Fix
+
+### Option 1: **Expose `/api/queue` & `/api/queue/stats` Without Auth**
+If you’re not dealing with sensitive data:
+```ts
+// In your Express backend:
+app.get('/api/queue', (req, res) => {
+  // remove or bypass `if (!req.session.user)` auth guard here
+  res.json(queue);
+});
+```
+
+Only do this **if the dashboard is public** or you're okay with unauthenticated visibility.
+
+---
+
+### Option 2: **Ensure Cookies Are Sent + Server Reads Them**
+If you want secure sessions:
+
+#### 1. Add this to your server:
+```ts
+import cors from 'cors';
+
+app.use(cors({
+  origin: 'https://beyondgrooming.onrender.com',
+  credentials: true, // 👈 Important
+}));
+```
+
+#### 2. And on the frontend fetch call:
+```ts
+await fetch('/api/queue/stats', {
+  credentials: 'include', // 👈 sends cookies
+});
+```
+
+#### 3. Ensure your session middleware supports this:
+```ts
+app.use(session({
+  secret: 'yourSecret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: true, // Required for HTTPS
+    sameSite: 'none', // Allow cross-origin
+  },
+}));
+```
+
+---
+
+## ✅ Quick Temporary Fix (to test visibility)
+
+Just to confirm it works:
+- Temporarily remove `if (!req.session.user)` checks from `/api/queue`
+- Re-deploy to Render
+- See if customers show up in dashboard (this confirms it's **100% auth/session issue**)
+
+---
+
+Let me know if you'd prefer:
+1. A full walkthrough to **fix sessions properly**
+2. A quick bypass to **test if the dashboard works when public**
+
+Once confirmed, we can clean up and secure everything again.
