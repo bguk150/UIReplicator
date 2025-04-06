@@ -64,8 +64,10 @@ class WebSocketManager {
     console.log('Connecting to WebSocket at:', wsUrl); // Debug log
     
     try {
-      // Get auth token from current session cookie
-      const token = document.cookie.split('; ').find(row => row.startsWith('connect.sid'))?.split('=')[1];
+      // Get auth token from current session cookie (check both possible names)
+      const token = document.cookie.split('; ').find(row => 
+        row.startsWith('beyond.sid') || row.startsWith('connect.sid')
+      )?.split('=')[1];
       
       // Create new WebSocket connection
       this.socket = new WebSocket(wsUrl);

@@ -180,46 +180,94 @@ async function sendSMS(phoneNumber: string, name: string): Promise<{ success: bo
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up session middleware for barber login
-  // If in production, use the PostgreSQL-based session store
-  if (process.env.NODE_ENV === 'production' && process.env.DATABASE_URL) {
-    // Use PostgreSQL session store in production
-    const { default: connectPgSimple } = await import('connect-pg-simple');
-    const PgSession = connectPgSimple(session);
-    
-    app.use(session({
-      store: new PgSession({
+  
+  // Force detection of production environment based on multiple signals
+  // This ensures we pick up both NODE_ENV and Render's specific environment
+  const isProduction = 
+    process.env.NODE_ENV === 'production' || 
+    !!process.env.RENDER || 
+    !!process.env.RENDER_EXTERNAL_URL;
+  
+  console.log(`Environment detected: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
+  console.log(`Node ENV: ${process.env.NODE_ENV}`);
+  
+  // Force use PostgreSQL session store in production
+  if (isProduction && process.env.DATABASE_URL) {
+    try {
+      console.log('Initializing PostgreSQL session store for production');
+      
+      // Import the PostgreSQL session store
+      const { default: connectPgSimple } = await import('connect-pg-simple');
+      const PgSession = connectPgSimple(session);
+      
+      // Create the store with detailed options
+      const pgStore = new PgSession({
         conString: process.env.DATABASE_URL,
         createTableIfMissing: true,
-        tableName: 'session' // Default table name
-      }),
-      secret: process.env.SESSION_SECRET || 'beyond-grooming-secret',
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        secure: true, // Always use secure cookies in production
-        sameSite: 'none', // Important for cross-site cookies in production
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        path: '/',
-        httpOnly: true
-      }
-    }));
+        tableName: 'session', // Default table name
+        pruneSessionInterval: 60 * 15, // Clean up expired sessions every 15 minutes
+        errorLog: (err) => console.error('Session store error:', err)
+      });
+      
+      // Test the connection to the session store
+      await new Promise<void>((resolve, reject) => {
+        pgStore.pruneSessions((err) => {
+          if (err) {
+            console.error('Failed to initialize session store:', err);
+            reject(err);
+          } else {
+            console.log('PostgreSQL session store initialized successfully');
+            resolve();
+          }
+        });
+      });
+      
+      // Configure session with the PostgreSQL store
+      app.use(session({
+        store: pgStore,
+        secret: process.env.SESSION_SECRET || 'beyond-grooming-secret',
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+          secure: isProduction, // Use secure cookies in production
+          sameSite: isProduction ? 'none' : 'lax', // Proper cross-site cookie handling
+          maxAge: 24 * 60 * 60 * 1000, // 24 hours
+          path: '/',
+          httpOnly: true
+        },
+        name: 'beyond.sid' // Custom name to avoid the default connect.sid
+      }));
+      
+      console.log('PostgreSQL session middleware configured');
+    } catch (err) {
+      console.error('Error setting up PostgreSQL session store:', err);
+      // Fallback to MemoryStore only as a last resort with warning
+      console.error('WARNING: Falling back to MemoryStore for sessions. This is not recommended for production!');
+      setupMemoryStore();
+    }
   } else {
-    // Use MemoryStore for development
+    console.log('Using MemoryStore for development environment');
+    setupMemoryStore();
+  }
+  
+  // Helper function to set up MemoryStore (used for development or as fallback)
+  function setupMemoryStore() {
     const SessionStore = MemoryStore(session);
     app.use(session({
       secret: process.env.SESSION_SECRET || 'beyond-grooming-secret',
       resave: false,
       saveUninitialized: false,
       cookie: {
-        secure: false, // No HTTPS in development
-        sameSite: 'lax',
+        secure: isProduction, // Secure in production, non-secure in dev
+        sameSite: isProduction ? 'none' : 'lax',
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
         path: '/',
         httpOnly: true
       },
       store: new SessionStore({
         checkPeriod: 86400000 // 24 hours
-      })
+      }),
+      name: 'beyond.sid' // Custom name to avoid the default connect.sid
     }));
   }
   
@@ -271,7 +319,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (err) {
         return res.status(500).json({ message: "Failed to logout" });
       }
-      res.clearCookie('connect.sid');
+      // Clear both possible cookie names to ensure logout works
+      res.clearCookie('beyond.sid');
+      res.clearCookie('connect.sid'); // Keep this for backward compatibility
       return res.status(200).json({ message: "Logged out successfully" });
     });
   });

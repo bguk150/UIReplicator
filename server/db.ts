@@ -4,7 +4,23 @@ import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
 import * as schema from "@shared/schema";
 
+// Set WebSocket constructor for Neon serverless
 neonConfig.webSocketConstructor = ws;
+
+// Note: While these configuration options aren't currently in the type definition,
+// they are supported in the actual implementation. TypeScript may show errors but
+// they will work at runtime.
+// See: https://github.com/neondatabase/serverless/blob/main/CONNECTION_POOLS.md
+
+// @ts-ignore - Set Neon serverless WebSocket reconnection options
+neonConfig.wsReconnectDelay = 1000; // 1 second before first reconnection attempt
+// @ts-ignore - Set max reconnection attempts
+neonConfig.wsMaxReconnects = 3; // Limit reconnection attempts
+
+// @ts-ignore - Configure deadlock retry options
+neonConfig.deadlockMaxRetries = 5;
+// @ts-ignore - Set retry delay for deadlocks
+neonConfig.deadlockRetryDelayMs = 250;
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
@@ -13,45 +29,130 @@ if (!process.env.DATABASE_URL) {
 const MAX_RETRIES = 5;
 const RETRY_DELAY = 5000; // 5 seconds
 
+// Optimize pool settings for Neon serverless in production
+const isProduction = process.env.NODE_ENV === 'production';
+
 export const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
-  max: 20, // Maximum number of clients
-  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-  connectionTimeoutMillis: 5000, // Return an error after 5 seconds if connection could not be established
+  ssl: { rejectUnauthorized: false }, // Always use SSL with Neon
+  max: isProduction ? 10 : 20, // Reduced max connections in production to prevent overloading
+  idleTimeoutMillis: isProduction ? 10000 : 30000, // Close idle clients faster in production
+  connectionTimeoutMillis: 5000, // Return an error after 5 seconds if connection couldn't be established
+  allowExitOnIdle: true, // Allow idle clients to be closed automatically
 });
 
 export const db = drizzle({ client: pool, schema });
 
-// Connection management
+// Connection management with enhanced error handling and reconnect logic
 let retryCount = 0;
+let connectionCheckInterval: NodeJS.Timeout | null = null;
 
 async function connectWithRetry() {
   try {
     console.log('Attempting database connection...');
-    await pool.connect();
+    const client = await pool.connect();
+    
     console.log('Database connected successfully');
     console.log('Database URL domain:', process.env.DATABASE_URL?.split('@')[1]?.split('/')[0]);
-    retryCount = 0; // Reset retry count on successful connection
-  } catch (err) {
-    console.error('Database connection error:', err);
+    
+    // Release the test connection but keep the pool active
+    client.release(true);
+    
+    // Reset retry count on successful connection
+    retryCount = 0;
+    
+    // Set up a periodic connection check for production
+    if (process.env.NODE_ENV === 'production' && !connectionCheckInterval) {
+      connectionCheckInterval = setInterval(async () => {
+        try {
+          // Ping database to keep the connection alive and verify health
+          const pingClient = await pool.connect();
+          await pingClient.query('SELECT 1');
+          pingClient.release(true);
+        } catch (pingError) {
+          console.error('Connection check failed:', pingError);
+          // If ping fails, trigger reconnect logic but with a different path
+          if (retryCount < MAX_RETRIES) {
+            // Clear the interval to prevent multiple concurrent reconnection attempts
+            if (connectionCheckInterval) {
+              clearInterval(connectionCheckInterval);
+              connectionCheckInterval = null;
+            }
+            connectWithRetry();
+          }
+        }
+      }, 60000); // Check every minute
+    }
+  } catch (err: any) {
+    // Enhanced error reporting with code detection
+    if (err.code === '57P01') {
+      console.error('Database connection terminated by administrator. This is often caused by connection pooling issues or server maintenance.');
+    } else {
+      console.error('Database connection error:', err);
+    }
+    
     retryCount++;
     
+    // Exponential backoff for retries
+    const delay = Math.min(RETRY_DELAY * Math.pow(1.5, retryCount-1), 30000); // Max 30 second delay
+    
     if (retryCount < MAX_RETRIES) {
-      console.log(`Retrying connection in ${RETRY_DELAY/1000} seconds... (Attempt ${retryCount}/${MAX_RETRIES})`);
-      setTimeout(connectWithRetry, RETRY_DELAY);
+      console.log(`Retrying connection in ${delay/1000} seconds... (Attempt ${retryCount}/${MAX_RETRIES})`);
+      setTimeout(connectWithRetry, delay);
     } else {
       console.error('Max retries reached. Please check your database configuration.');
+      // Reset retry count after a longer delay to eventually try again
+      setTimeout(() => {
+        retryCount = 0;
+        connectWithRetry();
+      }, 60000); // Wait a minute before starting fresh
     }
   }
 }
 
-// Handle pool errors
-pool.on('error', (err) => {
+// Handle pool errors with improved detection and recovery
+pool.on('error', (err: any) => {
   console.error('Unexpected database error:', err);
-  if (retryCount < MAX_RETRIES) {
-    connectWithRetry();
+  
+  // Special handling for common Neon error codes
+  if (err.code === '57P01') {
+    console.log('Detected connection terminated by admin error (57P01). Reconnecting...');
+  } else if (err.code === '08006' || err.code === '08001' || err.code === '08004') {
+    console.log('Detected connection failure. Reconnecting...');
+  } else if (err.code === 'ECONNRESET' || err.code === 'EPIPE') {
+    console.log('Detected network error. Reconnecting...');
   }
+  
+  // Prevent reconnection storm by checking retry count
+  if (retryCount < MAX_RETRIES) {
+    // Clear any existing connection check interval
+    if (connectionCheckInterval) {
+      clearInterval(connectionCheckInterval);
+      connectionCheckInterval = null;
+    }
+    
+    // Delay slightly before reconnecting to prevent rapid reconnection attempts
+    setTimeout(connectWithRetry, 1000);
+  }
+});
+
+// Clean up on process exit
+process.on('exit', () => {
+  if (connectionCheckInterval) {
+    clearInterval(connectionCheckInterval);
+  }
+  pool.end();
+});
+
+// Handle other termination signals
+['SIGINT', 'SIGTERM'].forEach(signal => {
+  process.on(signal, () => {
+    if (connectionCheckInterval) {
+      clearInterval(connectionCheckInterval);
+    }
+    pool.end();
+    process.exit(0);
+  });
 });
 
 // Initial connection

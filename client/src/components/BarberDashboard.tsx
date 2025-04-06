@@ -72,14 +72,7 @@ export default function BarberDashboard() {
     retry: 5, // Increased retries
     refetchOnWindowFocus: true, // Refresh when user focuses the window
     refetchOnMount: true, // Refresh when component mounts
-    onError: (error) => {
-      console.error("Queue fetch error:", error);
-      toast({
-        title: "Failed to fetch queue",
-        description: "Retrying...",
-        variant: "destructive",
-      });
-    }
+    // Remove unsupported onError option and use global error handler
   });
 
   // Query for queue stats

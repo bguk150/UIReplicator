@@ -41,6 +41,7 @@ export const getQueryFn: <T>(options: {
     return await res.json();
   };
 
+// Create a global query client with basic configuration
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -48,10 +49,11 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: Infinity,
-      retry: false,
+      retry: 3, // Add retry capability for better resilience
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
     },
     mutations: {
-      retry: false,
+      retry: 1, // Retry mutations once
     },
-  },
+  }
 });

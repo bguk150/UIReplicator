@@ -1,0 +1,198 @@
+
+Search
+
+Live tail
+GMT+1
+
+
+    at v.emit (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:397:12)
+    at WebSocket.<anonymous> (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:987:80)
+    at callListener (/opt/render/project/src/node_modules/ws/lib/event-target.js:290:14)
+    at WebSocket.onMessage (/opt/render/project/src/node_modules/ws/lib/event-target.js:209:9)
+    at WebSocket.emit (node:events:518:28)
+    at Receiver.receiverOnMessage (/opt/render/project/src/node_modules/ws/lib/websocket.js:1220:20) {
+  length: 116,
+  severity: 'FATAL',
+  code: '57P01',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'postgres.c',
+  line: '3289',
+  routine: 'ProcessInterrupts'
+}
+Node.js v22.14.0
+==> Running 'npm run start'
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+Attempting database connection...
+Warning: connect.session() MemoryStore is not
+designed for a production environment, as it will leak
+memory, and will not scale past a single process.
+WebSocket server initialized on path: /ws
+4:56:45 PM [express] Server started in production mode
+4:56:45 PM [express] Listening on port 10000
+4:56:45 PM [express] WebSocket server enabled and listening
+Database connected successfully
+Database URL domain: ep-spring-cherry-a6a3mhmh.us-west-2.aws.neon.tech
+WebSocket client connected from 127.0.0.1, URL: /ws
+Total connected clients: 1
+WebSocket client disconnected: Code 1001, Reason: 
+Total connected clients: 0
+WebSocket client connected from 127.0.0.1, URL: /ws
+Total connected clients: 1
+WebSocket client connected from 127.0.0.1, URL: /ws
+Total connected clients: 2
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue/stats' }
+Auth failed: /api/queue/stats
+4:56:54 PM [express] GET /api/queue/stats 401 in 6ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue' }
+Auth failed: /api/queue
+4:56:54 PM [express] GET /api/queue 401 in 2ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue' }
+Auth failed: /api/queue
+4:56:54 PM [express] GET /api/queue 401 in 1ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue/stats' }
+Auth failed: /api/queue/stats
+4:56:54 PM [express] GET /api/queue/stats 401 in 5ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue/stats' }
+Auth failed: /api/queue/stats
+4:56:54 PM [express] GET /api/queue/stats 401 in 2ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue' }
+Auth failed: /api/queue
+4:57:05 PM [express] GET /api/queue 401 in 2ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue/stats' }
+Auth failed: /api/queue/stats
+4:57:05 PM [express] GET /api/queue/stats 401 in 1ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue' }
+Auth failed: /api/queue
+4:57:08 PM [express] GET /api/queue 401 in 2ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue/stats' }
+Auth failed: /api/queue/stats
+4:57:08 PM [express] GET /api/queue/stats 401 in 1ms :: {"message":"Unauthorized"}
+WebSocket message received: PING
+WebSocket message received: PING
+WebSocket message received: PING
+WebSocket message received: PING
+WebSocket message received: PING
+WebSocket message received: PING
+file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:395
+0&&(o=t[0]),o instanceof Error)throw o;var u=new Error("Unhandled error."+(o?" ("+
+                               ^
+error: terminating connection due to administrator command
+    at cn.parseErrorMessage (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1182:6)
+    at cn.handlePacket (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1143:13)
+    at cn.parse (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1127:36)
+    at v.<anonymous> (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1190:16)
+    at v.emit (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:397:12)
+    at WebSocket.<anonymous> (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:987:80)
+    at callListener (/opt/render/project/src/node_modules/ws/lib/event-target.js:290:14)
+    at WebSocket.onMessage (/opt/render/project/src/node_modules/ws/lib/event-target.js:209:9)
+    at WebSocket.emit (node:events:518:28)
+    at Receiver.receiverOnMessage (/opt/render/project/src/node_modules/ws/lib/websocket.js:1220:20) {
+  length: 116,
+  severity: 'FATAL',
+  code: '57P01',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'postgres.c',
+  line: '3289',
+  routine: 'ProcessInterrupts'
+}
+Node.js v22.14.0
+==> Running 'npm run start'
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+Attempting database connection...
+Warning: connect.session() MemoryStore is not
+designed for a production environment, as it will leak
+memory, and will not scale past a single process.
+WebSocket server initialized on path: /ws
+4:59:07 PM [express] Server started in production mode
+4:59:07 PM [express] Listening on port 10000
+4:59:07 PM [express] WebSocket server enabled and listening
+Database connected successfully
+Database URL domain: ep-spring-cherry-a6a3mhmh.us-west-2.aws.neon.tech
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue/stats' }
+Auth failed: /api/queue/stats
+4:59:14 PM [express] GET /api/queue/stats 401 in 8ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue' }
+Auth failed: /api/queue
+4:59:14 PM [express] GET /api/queue 401 in 1ms :: {"message":"Unauthorized"}
+WebSocket client connected from 127.0.0.1, URL: /ws
+Total connected clients: 1
+WebSocket client disconnected: Code 1001, Reason: 
+Total connected clients: 0
+WebSocket client connected from 127.0.0.1, URL: /ws
+Total connected clients: 1
+WebSocket client connected from 127.0.0.1, URL: /ws
+Total connected clients: 2
+WebSocket message received: PING
+WebSocket message received: PING
+WebSocket message received: PING
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue/stats' }
+Auth failed: /api/queue/stats
+4:59:46 PM [express] GET /api/queue/stats 401 in 2ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue' }
+Auth failed: /api/queue
+4:59:46 PM [express] GET /api/queue 401 in 1ms :: {"message":"Unauthorized"}
+WebSocket message received: PING
+WebSocket message received: PING
+WebSocket message received: PING
+WebSocket message received: PING
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue' }
+Auth failed: /api/queue
+5:00:24 PM [express] GET /api/queue 401 in 1ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue/stats' }
+Auth failed: /api/queue/stats
+5:00:24 PM [express] GET /api/queue/stats 401 in 1ms :: {"message":"Unauthorized"}
+file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:395
+0&&(o=t[0]),o instanceof Error)throw o;var u=new Error("Unhandled error."+(o?" ("+
+                               ^
+error: terminating connection due to administrator command
+    at cn.parseErrorMessage (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1182:6)
+    at cn.handlePacket (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1143:13)
+    at cn.parse (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1127:36)
+    at v.<anonymous> (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1190:16)
+    at v.emit (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:397:12)
+    at WebSocket.<anonymous> (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:987:80)
+    at callListener (/opt/render/project/src/node_modules/ws/lib/event-target.js:290:14)
+    at WebSocket.onMessage (/opt/render/project/src/node_modules/ws/lib/event-target.js:209:9)
+    at WebSocket.emit (node:events:518:28)
+    at Receiver.receiverOnMessage (/opt/render/project/src/node_modules/ws/lib/websocket.js:1220:20) {
+  length: 116,
+  severity: 'FATAL',
+  code: '57P01',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'postgres.c',
+  line: '3289',
+  routine: 'ProcessInterrupts'
+}
+Node.js v22.14.0
