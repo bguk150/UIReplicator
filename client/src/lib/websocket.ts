@@ -62,11 +62,12 @@ class WebSocketManager {
       const headers = new Headers();
       const token = document.cookie.split('; ').find(row => row.startsWith('connect.sid'))?.split('=')[1];
       
-      this.socket = new WebSocket(wsUrl, {
-        headers: {
-          'Cookie': `connect.sid=${token || ''}`
-        }
-      });
+      this.socket = new WebSocket(wsUrl);
+if (token) {
+  this.socket.addEventListener('open', () => {
+    this.socket?.send(JSON.stringify({ type: 'AUTH', token }));
+  });
+}
       
       this.socket.onopen = this.handleOpen.bind(this);
       this.socket.onmessage = this.handleMessage.bind(this);

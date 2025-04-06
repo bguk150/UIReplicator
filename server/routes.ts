@@ -145,11 +145,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const SessionStore = MemoryStore(session);
   app.use(session({
     secret: process.env.SESSION_SECRET || 'beyond-grooming-secret',
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: '/',
       httpOnly: true
@@ -388,8 +388,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize WebSocket server
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
-  wss.on('connection', (ws) => {
+  wss.on('connection', (ws, req) => {
     console.log('WebSocket client connected');
+    
+    // Handle authentication message
+    ws.on('message', (data) => {
+      try {
+        const message = JSON.parse(data.toString());
+        if (message.type === 'AUTH' && message.token) {
+          console.log('WebSocket client authenticated');
+        }
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+      }
+    });
     
     // Add the client to our clients array
     clients.push(ws);
