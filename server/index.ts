@@ -17,10 +17,10 @@ const ALLOWED_IPS: string[] = [
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   const clientIP = req.ip || req.socket.remoteAddress || '';
-  
+
   // Log the IP for debugging during setup
   console.log(`Request from IP: ${clientIP}`);
-  
+
   if (ALLOWED_IPS.includes(clientIP) || clientIP.includes('::1')) {
     next(); // Allow the request to proceed
   } else {
@@ -109,3 +109,23 @@ app.use((req, res, next) => {
     log(`WebSocket server enabled and listening`);
   });
 })();
+
+// Assuming WebSocketServer is imported correctly (e.g., from 'ws')
+const { WebSocketServer } = require('ws'); // Or adjust import as needed
+
+const wss = new WebSocketServer({ 
+    server,
+    verifyClient: (info, callback) => {
+      // Verify session cookie
+      const cookie = info.req.headers.cookie;
+      if (!cookie) {
+        callback(false, 401, 'Unauthorized');
+        return;
+      }
+      callback(true);
+    }
+  });
+
+  wss.on("connection", (ws) => {
+    // WebSocket connection handling logic here...
+  });

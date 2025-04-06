@@ -52,7 +52,15 @@ class WebSocketManager {
     console.log('Connecting to WebSocket at:', wsUrl); // Debug log
     
     try {
-      this.socket = new WebSocket(wsUrl);
+      // Get auth token from current session
+      const headers = new Headers();
+      const token = document.cookie.split('; ').find(row => row.startsWith('connect.sid'))?.split('=')[1];
+      
+      this.socket = new WebSocket(wsUrl, {
+        headers: {
+          'Cookie': `connect.sid=${token || ''}`
+        }
+      });
       
       this.socket.onopen = this.handleOpen.bind(this);
       this.socket.onmessage = this.handleMessage.bind(this);
