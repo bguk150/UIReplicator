@@ -2,21 +2,9 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { WebSocketServer } from 'ws';
-import session from 'express-session';
 import cors from 'cors';
 
 const app = express();
-
-// Session configuration
-app.use(session({
-  secret: 'your-secret-key',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax'
-  }
-}));
 
 // CORS configuration - important for WebSocket and cross-origin requests
 app.use(cors({

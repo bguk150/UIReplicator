@@ -1,7 +1,7 @@
 #!/bin/bash
-# Make sure we have all dev dependencies installed
+# Install all dependencies including dev dependencies
 npm install --include=dev
 
-# Now run the build commands with npx
-npx vite build
-npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+# Run the build commands
+NODE_ENV=production npx vite build
+NODE_ENV=production npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
