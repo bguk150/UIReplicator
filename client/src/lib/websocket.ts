@@ -47,22 +47,34 @@ class WebSocketManager {
       return;
     }
     
+    // Determine WebSocket URL based on current environment
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const host = window.location.host;
+    
+    // For render.com deployments, we need to ensure we're using the right domain
+    // Render uses .onrender.com domains and WebSockets need to connect to the same domain
     const wsUrl = `${protocol}//${host}/ws`;
+    
     console.log('Connecting to WebSocket at:', wsUrl); // Debug log
     
     try {
-      // Get auth token from current session
-      const headers = new Headers();
+      // Get auth token from current session cookie
       const token = document.cookie.split('; ').find(row => row.startsWith('connect.sid'))?.split('=')[1];
       
+      // Create new WebSocket connection
       this.socket = new WebSocket(wsUrl);
-if (token) {
-  this.socket.addEventListener('open', () => {
-    this.socket?.send(JSON.stringify({ type: 'AUTH', token }));
-  });
-}
+      
+      // Set up authentication after connection is established
+      if (token) {
+        this.socket.addEventListener('open', () => {
+          console.log('WebSocket open, sending auth token');
+          this.socket?.send(JSON.stringify({ 
+            type: 'AUTH', 
+            token,
+            timestamp: new Date().toISOString()
+          }));
+        });
+      }
       
       this.socket.onopen = this.handleOpen.bind(this);
       this.socket.onmessage = this.handleMessage.bind(this);
@@ -87,16 +99,33 @@ if (token) {
     try {
       const data = JSON.parse(event.data);
       
-      // If we receive a queue update notification
-      if (data.type === "QUEUE_UPDATE") {
-        console.log("Queue update received:", data);
-        
-        // Invalidate queue data in the React Query cache
-        queryClient.invalidateQueries({ queryKey: ['/api/queue'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/queue/stats'] });
-        
-        // Notify all listeners
-        this.notifyListeners();
+      // Handle different message types
+      switch (data.type) {
+        case "QUEUE_UPDATE":
+          console.log("Queue update received:", data);
+          
+          // Invalidate queue data in the React Query cache
+          queryClient.invalidateQueries({ queryKey: ['/api/queue'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/queue/stats'] });
+          
+          // Notify all listeners
+          this.notifyListeners();
+          break;
+          
+        case "CONNECTED":
+          console.log("Connection confirmation received:", data.message || "Connected to server");
+          // Reset connection attempts on successful connection
+          this.connectionAttempts = 0;
+          break;
+          
+        case "PONG":
+          // Received a pong response from the server (heartbeat response)
+          console.log("Heartbeat pong received");
+          // Connection is healthy, no action needed
+          break;
+          
+        default:
+          console.log("Received message of unknown type:", data.type);
       }
     } catch (error) {
       console.error("Error processing WebSocket message:", error);
@@ -200,7 +229,32 @@ export function useQueueUpdates(callback?: Listener) {
     // Force an initial data refresh
     webSocketManager.refreshQueueData();
     
-    // Initial polling setup
+    // Set up a heartbeat to keep the WebSocket connection alive
+    // This is crucial for production deployments that might terminate inactive connections
+    const heartbeatInterval = setInterval(() => {
+      if (webSocketManager.socket?.readyState === WebSocket.OPEN) {
+        try {
+          // Send a ping message to keep the connection alive
+          webSocketManager.socket.send(JSON.stringify({ 
+            type: 'PING', 
+            timestamp: new Date().toISOString() 
+          }));
+          console.log('Heartbeat ping sent');
+        } catch (error) {
+          console.error('Failed to send heartbeat:', error);
+          // If sending fails, try to reconnect
+          webSocketManager.connect(true);
+        }
+      } else if (webSocketManager.socket?.readyState === WebSocket.CLOSED || 
+                 webSocketManager.socket?.readyState === WebSocket.CLOSING || 
+                 !webSocketManager.socket) {
+        // If socket is closed or in process of closing, try to reconnect
+        console.log('WebSocket not connected during heartbeat check, attempting reconnection');
+        webSocketManager.connect(true);
+      }
+    }, 30000); // Every 30 seconds send a heartbeat
+    
+    // Initial polling setup for data refresh (as backup)
     const periodicRefresh = setInterval(() => {
       // This will only be used as a fallback if WebSocket is not connected
       if (webSocketManager.socket?.readyState !== WebSocket.OPEN) {
@@ -217,6 +271,7 @@ export function useQueueUpdates(callback?: Listener) {
     
     // Cleanup on unmount
     return () => {
+      clearInterval(heartbeatInterval);
       clearInterval(periodicRefresh);
       unsubscribe();
       // Don't disconnect the WebSocket on component unmount

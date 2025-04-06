@@ -28,16 +28,36 @@ export default function BarberDashboard() {
     });
   }, []));
 
-  // Effect to monitor WebSocket connection status
+  // Effect to monitor WebSocket connection status with improved handling
   useEffect(() => {
-    // Check connection status every 5 seconds
-    const intervalId = setInterval(() => {
+    // Function to check connection and update state
+    const checkConnection = () => {
       const isConnected = websocket.socket?.readyState === WebSocket.OPEN;
-      setWsConnected(isConnected);
-    }, 5000);
+      
+      // Only update state if connection status has changed
+      // This prevents unnecessary re-renders
+      if (isConnected !== wsConnected) {
+        setWsConnected(isConnected);
+        
+        // Log status change for debugging
+        console.log(`WebSocket connection status changed to: ${isConnected ? 'connected' : 'disconnected'}`);
+        
+        // If we've just detected disconnection, try to reconnect
+        if (!isConnected && websocket.socket) {
+          console.log('Attempting to reconnect WebSocket...');
+          websocket.connect(true); // Force reconnection
+        }
+      }
+    };
+    
+    // Initial check
+    checkConnection();
+    
+    // Check connection status every 3 seconds
+    const intervalId = setInterval(checkConnection, 3000);
 
     return () => clearInterval(intervalId);
-  }, [websocket]);
+  }, [websocket, wsConnected]);
 
   // Query for fetching queue data
   const { 

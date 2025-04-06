@@ -26,11 +26,49 @@ function broadcastQueueUpdate() {
     timestamp: new Date().toISOString()
   });
   
-  clients.forEach(client => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(message);
+  console.log(`Broadcasting queue update to ${clients.length} clients`);
+  
+  // Track connected and disconnected clients to clean up the array
+  let connectedCount = 0;
+  let disconnectedCount = 0;
+  
+  // Send to all connected clients with proper error handling
+  clients.forEach((client, index) => {
+    try {
+      // Only send to clients that are in OPEN state
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+        connectedCount++;
+      } else if (client.readyState === WebSocket.CLOSED || client.readyState === WebSocket.CLOSING) {
+        // Mark closed clients for potential cleanup
+        disconnectedCount++;
+      }
+    } catch (error) {
+      console.error(`Error broadcasting to client ${index}:`, error);
+      // If an error occurs during send, we should consider this client disconnected
+      disconnectedCount++;
     }
   });
+  
+  console.log(`Broadcast complete: ${connectedCount} connected, ${disconnectedCount} disconnected`);
+  
+  // Periodically clean up the clients array to remove closed connections
+  // This prevents memory leaks from accumulating disconnected clients
+  if (disconnectedCount > 0 && clients.length > 10) {
+    // Only do cleanup if we have some disconnected clients and the array is getting large
+    const activeClients = clients.filter(client => 
+      client.readyState !== WebSocket.CLOSED && 
+      client.readyState !== WebSocket.CLOSING
+    );
+    
+    // Update the global clients array with only active connections
+    if (activeClients.length < clients.length) {
+      console.log(`WebSocket cleanup: Removed ${clients.length - activeClients.length} disconnected clients`);
+      // Replace the array contents without changing the reference
+      clients.length = 0;
+      activeClients.forEach(client => clients.push(client));
+    }
+  }
 }
 
 // Function to send SMS using ClickSend API
@@ -142,22 +180,48 @@ async function sendSMS(phoneNumber: string, name: string): Promise<{ success: bo
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up session middleware for barber login
-  const SessionStore = MemoryStore(session);
-  app.use(session({
-    secret: process.env.SESSION_SECRET || 'beyond-grooming-secret',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      path: '/',
-      httpOnly: true
-    },
-    store: new SessionStore({
-      checkPeriod: 86400000 // 24 hours
-    })
-  }));
+  // If in production, use the PostgreSQL-based session store
+  if (process.env.NODE_ENV === 'production' && process.env.DATABASE_URL) {
+    // Use PostgreSQL session store in production
+    const { default: connectPgSimple } = await import('connect-pg-simple');
+    const PgSession = connectPgSimple(session);
+    
+    app.use(session({
+      store: new PgSession({
+        conString: process.env.DATABASE_URL,
+        createTableIfMissing: true,
+        tableName: 'session' // Default table name
+      }),
+      secret: process.env.SESSION_SECRET || 'beyond-grooming-secret',
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: true, // Always use secure cookies in production
+        sameSite: 'none', // Important for cross-site cookies in production
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        path: '/',
+        httpOnly: true
+      }
+    }));
+  } else {
+    // Use MemoryStore for development
+    const SessionStore = MemoryStore(session);
+    app.use(session({
+      secret: process.env.SESSION_SECRET || 'beyond-grooming-secret',
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: false, // No HTTPS in development
+        sameSite: 'lax',
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        path: '/',
+        httpOnly: true
+      },
+      store: new SessionStore({
+        checkPeriod: 86400000 // 24 hours
+      })
+    }));
+  }
   
   // Middleware to check if user is authenticated
   const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
@@ -385,30 +449,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   
-  // Initialize WebSocket server
+  // Initialize WebSocket server with enhanced configuration
   const wss = new WebSocketServer({ 
     server: httpServer, 
     path: '/ws',
-    clientTracking: true
+    clientTracking: true,
+    // Handle CORS for WebSocket connections
+    verifyClient: (info, callback) => {
+      // Allow all connections in our case
+      // You can implement custom verification logic here if needed
+      callback(true);
+    }
   });
   
+  // Track WebSocket connections and their status
+  console.log('WebSocket server initialized on path: /ws');
+  
   wss.on('connection', (ws, req) => {
-    console.log('WebSocket client connected');
+    const clientIP = req.socket.remoteAddress;
+    const clientUrl = req.url;
+    console.log(`WebSocket client connected from ${clientIP}, URL: ${clientUrl}`);
     
     // Send initial connection success message
-    ws.send(JSON.stringify({ type: 'CONNECTED', timestamp: new Date().toISOString() }));
+    try {
+      ws.send(JSON.stringify({ 
+        type: 'CONNECTED', 
+        timestamp: new Date().toISOString(),
+        message: 'WebSocket connection established'
+      }));
+    } catch (err) {
+      console.error('Error sending initial connection message:', err);
+    }
     
     // Handle authentication message
     ws.on('message', (data) => {
       try {
         const message = JSON.parse(data.toString());
+        console.log('WebSocket message received:', message.type);
+        
         if (message.type === 'AUTH' && message.token) {
           console.log('WebSocket client authenticated');
-          // Send initial queue state
+          // Mark this connection as authenticated if needed
+          
+          // Send initial queue state to the newly authenticated client
           broadcastQueueUpdate();
+        } else if (message.type === 'PING') {
+          // Handle heartbeat/ping messages
+          ws.send(JSON.stringify({ 
+            type: 'PONG', 
+            timestamp: new Date().toISOString() 
+          }));
         }
       } catch (error) {
-        console.error('WebSocket message error:', error);
+        console.error('WebSocket message parsing error:', error);
       }
     });
     
@@ -416,21 +509,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     clients.push(ws);
     
     // Handle client disconnect
-    ws.on('close', () => {
-      console.log('WebSocket client disconnected');
+    ws.on('close', (code, reason) => {
+      console.log(`WebSocket client disconnected: Code ${code}, Reason: ${reason || 'No reason provided'}`);
       const index = clients.indexOf(ws);
       if (index !== -1) {
         clients.splice(index, 1);
       }
+      console.log(`Total connected clients: ${clients.length}`);
     });
     
     // Handle errors
     ws.on('error', (error) => {
-      console.error('WebSocket error:', error);
+      console.error('WebSocket connection error:', error);
     });
     
-    // Send initial state
-    ws.send(JSON.stringify({ type: 'CONNECTED', timestamp: new Date().toISOString() }));
+    // Log the total number of connected clients
+    console.log(`Total connected clients: ${clients.length}`);
   });
   
   return httpServer;
