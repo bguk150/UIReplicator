@@ -46,7 +46,13 @@ async function sendSMS(phoneNumber: string, name: string): Promise<{ success: bo
     }
     
     const url = "https://rest.clicksend.com/v3/sms/send";
-    const message = `Hi ${name}, you're next in line at Beyond Grooming! Please come in now and secure your spot in the chair.`;
+    const message = `Hi, it's Beyond Grooming✂️💈
+
+Just a heads-up – there's 1 person ahead of you in the queue! You've got 15 minutes to arrive and secure your spot in the chair.
+
+Don't lose your deposit – make it on time!
+
+See you soon!`;
     
     // Format phone number (add country code if needed)
     let formattedPhone = phoneNumber;
@@ -224,14 +230,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If status is set to "Almost Done", send SMS
       if (updates.status === "Almost Done" && currentItem.status !== "Almost Done") {
+        // First update the sms_sent flag in accordance with the workflow
+        await storage.updateQueueItem(id, { sms_sent: "Yes" });
+        
+        // Then send the actual SMS
         const smsResult = await sendSMS(currentItem.phone_number, currentItem.name);
         
-        if (smsResult.success) {
-          // Update sms_sent status
-          await storage.updateQueueItem(id, { sms_sent: "Yes" });
-        } else {
+        if (!smsResult.success) {
           console.error("Failed to send SMS:", smsResult.message);
-          // Continue without failing the request
+          // Continue without failing the request, but log the error
         }
       }
       
