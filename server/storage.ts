@@ -33,7 +33,8 @@ export class DatabaseStorage implements IStorage {
       if (!existingUser) {
         const defaultBarber: InsertUser = {
           username: "beyondgroominguk@gmail.com",
-          password: "bg_uk123" // In a real app, this would be hashed
+          password: "bg_uk123", // In a real app, this would be hashed
+          role: "barber"
         };
         await this.createUser(defaultBarber);
         console.log("Created default barber account");

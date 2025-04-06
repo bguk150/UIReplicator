@@ -46,11 +46,20 @@ export default function BarberDashboard() {
     refetch: refetchQueue
   } = useQuery<Queue[]>({
     queryKey: ['/api/queue', refreshKey],
-    refetchInterval: 30000, // Poll every 30 seconds regardless of WebSocket
-    staleTime: 10000, // Keep data fresh for at least 10 seconds
+    refetchInterval: wsConnected ? false : 30000, // Only poll if WebSocket is down
+    staleTime: 5000, // Reduced stale time for more frequent updates
     initialData: [], // Default empty array to avoid type errors
-    retry: 3, // Retry failed requests 3 times
+    retry: 5, // Increased retries
     refetchOnWindowFocus: true, // Refresh when user focuses the window
+    refetchOnMount: true, // Refresh when component mounts
+    onError: (error) => {
+      console.error("Queue fetch error:", error);
+      toast({
+        title: "Failed to fetch queue",
+        description: "Retrying...",
+        variant: "destructive",
+      });
+    }
   });
 
   // Query for queue stats

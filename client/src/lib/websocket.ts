@@ -26,6 +26,12 @@ class WebSocketManager {
       }
       this.socket = null;
     }
+
+    // Reset connection attempts on manual reconnect
+    if (isManualReconnect) {
+      this.connectionAttempts = 0;
+      console.log("Manual reconnect triggered - resetting connection attempts");
+    }
     
     // Reset connection attempts if manually reconnecting
     if (isManualReconnect) {
