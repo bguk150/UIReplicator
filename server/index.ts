@@ -2,8 +2,28 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { WebSocketServer } from 'ws';
+import session from 'express-session';
+import cors from 'cors';
 
 const app = express();
+
+// Session configuration
+app.use(session({
+  secret: 'your-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax'
+  }
+}));
+
+// CORS configuration
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -84,6 +104,10 @@ app.use((req, res, next) => {
   const wss = new WebSocketServer({ 
     noServer: true, // Detaches WebSocket from HTTP server
     verifyClient: (info, callback) => {
+      if (!info.req || !info.req.headers) {
+        callback(false, 401, 'Invalid request');
+        return;
+      }
       const cookie = info.req.headers.cookie;
       if (!cookie) {
         callback(false, 401, 'Unauthorized');
