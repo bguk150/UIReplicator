@@ -145,10 +145,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const SessionStore = MemoryStore(session);
   app.use(session({
     secret: process.env.SESSION_SECRET || 'beyond-grooming-secret',
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     cookie: {
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Set to false to work in development
+      sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     },
     store: new SessionStore({
@@ -158,9 +159,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Middleware to check if user is authenticated
   const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
-    if (req.session.userId) {
+    console.log('Auth check:', {
+      hasSession: !!req.session,
+      userId: req.session?.userId,
+      path: req.path
+    });
+    
+    if (req.session?.userId) {
       next();
     } else {
+      console.log('Auth failed:', req.path);
       res.status(401).json({ message: "Unauthorized" });
     }
   };
