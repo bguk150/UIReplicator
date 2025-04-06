@@ -6,6 +6,46 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// IP Restriction Middleware for iPad-only access
+// This is commented out by default for development
+// Uncomment and set the correct iPad IP address when deploying
+/*
+const ALLOWED_IPS: string[] = [
+  '127.0.0.1',           // Localhost for development
+  'SHOP_IPAD_IP_HERE'    // Replace with the shop iPad's IP address
+];
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const clientIP = req.ip || req.socket.remoteAddress || '';
+  
+  // Log the IP for debugging during setup
+  console.log(`Request from IP: ${clientIP}`);
+  
+  if (ALLOWED_IPS.includes(clientIP) || clientIP.includes('::1')) {
+    next(); // Allow the request to proceed
+  } else {
+    // Return a friendly error message
+    res.status(403).send(`
+      <html>
+        <head>
+          <title>Beyond Grooming - Access Restricted</title>
+          <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+            h1 { color: #333; }
+            p { color: #555; }
+          </style>
+        </head>
+        <body>
+          <h1>Access Restricted</h1>
+          <p>This application is only accessible from authorized devices.</p>
+          <p>Please use the shop iPad to access this application.</p>
+        </body>
+      </html>
+    `);
+  }
+});
+*/
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
