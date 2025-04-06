@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Here's a detailed prompt based on the simplified and clear breakdown:
 
 ---
@@ -94,4 +95,102 @@ We need a web app to manage the queue and customer details for the Beyond Groomi
 
 ---
 
+=======
+Here's a detailed prompt based on the simplified and clear breakdown:
+
+---
+
+**Prompt: Build the Beyond Grooming Queue Management App**
+
+**Objective:**  
+We need a web app to manage the queue and customer details for the Beyond Grooming barbershop. The app should have a Customer Check-In Page and a Barber Dashboard, integrated with ClickSend SMS for sending notifications to customers. The app should be built using Supabase for real-time data storage and management, with a modern and clean dark theme for the UI.
+
+---
+
+### 1. **Customer Check-In Page (Public Page)**
+   - **Fields:** 
+     - **Name** (Text Input)
+     - **Phone Number** (Text Input, UK format)
+     - **Service Type** (Dropdown with options like Haircut, Beard Trim, etc.)
+     - **Payment Method** (Dropdown: Cash or Card)
+   - **On Form Submission:**
+     - The backend will auto-fill the following fields in the Supabase table `queue`:
+       - `check_in_time` (timestamp)
+       - `status` (default "Waiting")
+       - `payment_verified` (default "No")
+       - `sms_sent` (default "No")
+
+---
+
+### 2. **Barber Dashboard (Private Page)**
+   - **Login Page**:
+     - Use the credentials: `beyondgroominguk@gmail.com` / `bg_uk123` to log in.
+   - **Dashboard Functionality:**
+     - View a list of customers in the queue with details such as:
+       - **Name**
+       - **Service Type**
+       - **Phone Number**
+       - **Check-in Time** (displayed in HH:MM:SS format)
+     - **Actions per Customer**:
+       - **Verify Cash Payment** (only visible when the payment method is "Cash" and `payment_verified` is "No")
+         - When clicked: Set `payment_verified = "Yes"`
+       - **Almost Done** (updates customer status to "Almost Done")
+         - When clicked: Set `status = "Almost Done"`, `sms_sent = "Yes"`, and trigger an SMS to the customer using the ClickSend API.
+       - **Mark as Served** (removes customer from the queue once they’ve been served)
+         - When clicked: Set `status = "Served"` and remove the customer from the dashboard.
+
+---
+
+### 3. **SMS Integration (ClickSend API)**
+   - **Trigger SMS via ClickSend** when the **"Almost Done"** button is clicked:
+     - **Message Content:**
+       - "Hi {name}, you're next in line at Beyond Grooming! Please come in now and secure your spot in the chair."
+     - Use the **ClickSend API** to send the SMS to the customer’s phone number.
+     - Credentials: Use the **Base64-encoded API credentials** below in the `supabase.ts` file:
+       - `NkUxQUJFRDEtRTZCRi1GMUJGLUI0RUMtODYzN0YxNzJGMkNE`
+
+---
+
+### 4. **UI Design and Customization**
+   - **Overall Theme**: Modern, clean dark theme with a slight gradient.
+   - **Colors:**
+     - **Background**: Dark charcoal (`#1A1F2C`)
+     - **Accent Colors**: Blue-ish tones like (`#4C6D7C`)
+     - **Button Colors:**
+       - **Almost Done**: Mango yellow (`#FEC6A1`)
+       - **Mark as Served**: Green (`#C2F2C3`)
+       - **Verify Cash**: Light blue (`#D3E4FD`)
+     - **Text**: White (`#FFFFFF`) and light grey (`#D3D3D3`)
+   - **Typography & UI:**
+     - **Large bold headings** for easy visibility
+     - **Clean card design** with subtle shadows
+     - **Touch-friendly buttons** with icons: clock for time, checkmark for served, cash symbol for cash payments
+
+---
+
+### 5. **Barber Dashboard – Logout & Authentication**
+   - **Logout Behavior**:
+     - Ensure that the Barber Dashboard is protected and requires authentication. When logging out or navigating back to the Check-In Page, users should be logged out automatically.
+   - **UI Clean-up**:
+     - Remove unnecessary UI text like "Queue Management" and "Managing customer queue efficiently". The UI should be clean and focused on the queue details and customer actions.
+
+---
+
+### 6. **Final Testing & Refinements**
+   - **Testing Steps**:
+     1. Test **Customer Check-In** form to ensure data is added to the Supabase `queue` table correctly.
+     2. Test **Login and Logout** functionality for the Barber Dashboard.
+     3. Verify that the **"Almost Done"** button triggers the SMS to the customer’s phone number correctly.
+     4. Verify that **Mark as Served** removes the customer from the queue.
+   - **Refinement**: Make any necessary adjustments to ensure smooth flow and functionality.
+
+---
+
+### 7. **Additional Notes**:
+   - **Public Access**: The Check-In page should be accessible publicly, while the Barber Dashboard should only be accessible after logging in.
+   - **Security Considerations**: Ensure that the credentials for ClickSend API are correctly integrated and stored securely.
+
+---
+
+>>>>>>> a589008baa662226a5d10f0459b8252c0e5d7436
 Once the application is complete, it should be fully functional with all requested features, ready for use in the barbershop.

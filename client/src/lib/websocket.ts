@@ -19,6 +19,12 @@ class WebSocketManager {
     
     // Close any existing socket that's in a bad state
     if (this.socket) {
+      // Clean up existing heartbeat timer first
+      if ((this.socket as any).heartbeatTimer) {
+        clearInterval((this.socket as any).heartbeatTimer);
+        (this.socket as any).heartbeatTimer = null;
+      }
+      
       try {
         this.socket.close();
       } catch (err) {
@@ -63,6 +69,30 @@ class WebSocketManager {
       
       // Create new WebSocket connection
       this.socket = new WebSocket(wsUrl);
+      
+      // Set up a socket-specific heartbeat timer after connection establishment
+      this.socket.addEventListener('open', () => {
+        // Create a heartbeat timer for this specific socket
+        const heartbeatTimer = setInterval(() => {
+          if (this.socket?.readyState === WebSocket.OPEN) {
+            try {
+              this.socket.send(JSON.stringify({ 
+                type: 'PING', 
+                timestamp: new Date().toISOString() 
+              }));
+              console.log('Socket-specific heartbeat sent');
+            } catch (error) {
+              console.error('Failed to send socket heartbeat:', error);
+            }
+          } else {
+            // If socket is no longer open, clear this timer
+            clearInterval(heartbeatTimer);
+          }
+        }, 25000); // Every 25 seconds
+        
+        // Store timer for cleanup
+        (this.socket as any).heartbeatTimer = heartbeatTimer;
+      });
       
       // Set up authentication after connection is established
       if (token) {
@@ -135,6 +165,13 @@ class WebSocketManager {
   // Handle WebSocket close event
   private handleClose(event: CloseEvent) {
     console.log(`WebSocket disconnected: ${event.code} - ${event.reason}`);
+    
+    // Clean up heartbeat timer if it exists
+    if (this.socket && (this.socket as any).heartbeatTimer) {
+      clearInterval((this.socket as any).heartbeatTimer);
+      (this.socket as any).heartbeatTimer = null;
+    }
+    
     this.socket = null;
     
     // Try to reconnect if not closed normally
@@ -171,6 +208,12 @@ class WebSocketManager {
   // Manually disconnect
   disconnect() {
     if (this.socket) {
+      // Clean up heartbeat timer if it exists
+      if ((this.socket as any).heartbeatTimer) {
+        clearInterval((this.socket as any).heartbeatTimer);
+        (this.socket as any).heartbeatTimer = null;
+      }
+      
       this.socket.close(1000, "Normal closure");
       this.socket = null;
     }

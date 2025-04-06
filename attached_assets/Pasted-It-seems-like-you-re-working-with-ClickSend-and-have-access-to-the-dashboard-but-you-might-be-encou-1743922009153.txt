@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 It seems like you're working with ClickSend and have access to the dashboard, but you might be encountering some issues with the SMS functionality. Here's what you can do to ensure everything works properly:
 
 ### 1. **Free Trial Limitations:**
@@ -18,4 +19,26 @@ It seems like you're working with ClickSend and have access to the dashboard, bu
 ### 6. **Check ClickSend Logs:**
    If you're not receiving SMS even though the API indicates success, check the ClickSend logs for any errors or specific restrictions (such as delivery failures due to carrier issues or trial account limitations).
 
+=======
+It seems like you're working with ClickSend and have access to the dashboard, but you might be encountering some issues with the SMS functionality. Here's what you can do to ensure everything works properly:
+
+### 1. **Free Trial Limitations:**
+   Your ClickSend account is currently on a free trial, as indicated by the 14-day remaining period. During the trial, there might be some limitations, like restrictions on the number of SMS messages you can send or specific numbers you can send to. Ensure that your trial account is fully activated and that there are no restrictions blocking your SMS delivery.
+
+### 2. **Credit Balance:**
+   Your account has a balance of £2.00 free credit. While this is enough for testing, you might need to top up if you reach the limit or require more messages to be sent.
+
+### 3. **Phone Number Format:**
+   Double-check that the phone number format in your API requests matches what ClickSend expects. For UK numbers, use the international format like `+447012345678` (without spaces), as some services require the full international format to avoid issues.
+
+### 4. **API Credentials:**
+   You should ensure your API username and key are properly set in your request headers (Base64 encoded). This will authenticate your requests to the API.
+
+### 5. **SMS Queue:**
+   Based on your dashboard, it seems that no messages have been sent yet, which could be because you haven't activated or tested it thoroughly. Ensure that your backend code is triggering the SMS correctly after the "Almost Done" button is clicked.
+
+### 6. **Check ClickSend Logs:**
+   If you're not receiving SMS even though the API indicates success, check the ClickSend logs for any errors or specific restrictions (such as delivery failures due to carrier issues or trial account limitations).
+
+>>>>>>> a589008baa662226a5d10f0459b8252c0e5d7436
 You might want to send a test message directly from the ClickSend dashboard to ensure everything is set up properly. Let me know if you need further details or have specific questions!
