@@ -1,0 +1,187 @@
+Got it — since this is your **final correction shot**, here’s an **everything-you-need, one-shot deployment checklist** to make sure your **Beyond Grooming Dashboard works perfectly on Render**, especially showing the **live customer queue**.
+
+---
+
+## ✅ 1. Fix the Build Failure (`vite: not found`)
+
+### 🔥 Problem:
+Render uses `npm install --production` by default → **devDependencies like `vite` aren't installed** → build fails.
+
+### ✅ Solution:
+You have two valid approaches. Choose ONE:
+
+---
+
+### ✅ **Option A: Move Vite + Esbuild to Dependencies (Simplest)**
+
+**In `package.json`:**
+
+Move the following from `devDependencies` ➝ `dependencies`:
+```json
+"dependencies": {
+  "vite": "^4.5.0",
+  "esbuild": "^0.19.0",
+  "@vitejs/plugin-react": "^4.1.0",
+  "tailwindcss": "^3.3.2",
+  "autoprefixer": "^10.4.14",
+  "postcss": "^8.4.24",
+  "typescript": "^5.2.0"
+}
+```
+
+Then push to GitHub. Render will auto-deploy using the existing `npm run build`.
+
+---
+
+### ✅ **Option B: Use Custom Render Build Script**
+
+You already had a working `render-build.sh`. Just make sure this is your setup:
+
+**📝 `render.yaml`:**
+```yaml
+services:
+  - type: web
+    name: UIReplicator
+    env: node
+    buildCommand: chmod +x render-build.sh && ./render-build.sh
+    startCommand: node dist/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        value: your-secret-key
+      - key: RENDER_EXTERNAL_HOSTNAME
+        value: uireplicator.onrender.com
+      # Also include all your other keys here
+```
+
+**📝 `render-build.sh`:**
+```bash
+#!/usr/bin/env bash
+set -e
+set -x
+
+echo "Installing dependencies with devDependencies..."
+npm ci --include=dev
+
+echo "Running build commands..."
+NODE_ENV=production npx vite build
+NODE_ENV=production npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+echo "Build completed successfully!"
+```
+
+---
+
+## ✅ 2. Environment Variables (MUST BE SET)
+
+Set these in **Render → Environment tab**:
+
+| Key                    | Value                                              |
+|------------------------|----------------------------------------------------|
+| `NODE_ENV`             | `production`                                       |
+| `SESSION_SECRET`       | a secure random string                             |
+| `RENDER_EXTERNAL_HOSTNAME` | `uireplicator.onrender.com`                     |
+| `DATABASE_URL`         | from Neon PostgreSQL                               |
+| `PGUSER` / `PGPASSWORD` | from Neon (optional unless using PG driver directly) |
+| `CLICKSEND_API_KEY`    | your ClickSend key                                 |
+| `CLICKSEND_USERNAME`   | your ClickSend login email                         |
+
+---
+
+## ✅ 3. Fix Session Store (Auth not working)
+
+**🔴 Problem:**
+Render logs show:
+```
+Auth check: { hasSession: true, userId: undefined }
+401 Unauthorized
+```
+
+**🟢 Fix:**
+In `server/routes.ts`, ensure you’re using `connect-pg-simple` for session storage like this:
+
+```ts
+import session from 'express-session';
+import connectPgSimple from 'connect-pg-simple';
+
+const PgSession = connectPgSimple(session);
+
+app.use(
+  session({
+    store: new PgSession({
+      conString: process.env.DATABASE_URL,
+    }),
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: true,
+      sameSite: 'none',
+      maxAge: 24 * 60 * 60 * 1000,
+      domain: process.env.RENDER_EXTERNAL_HOSTNAME, // helps set correct cookie
+    },
+  })
+);
+```
+
+---
+
+## ✅ 4. WebSocket Client Fix (Dashboard not showing queue)
+
+In **`client/src/lib/websocket.ts`**, ensure WebSocket URL is built correctly:
+
+```ts
+const host = window.location.host;
+const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+const wsUrl = `${protocol}://${host}/ws`;
+```
+
+Also: Add **heartbeat ping response + reconnect logic** with exponential backoff to avoid disconnects.
+
+---
+
+## ✅ 5. Cookie Handling (Most ignored)
+
+🟠 Cookies must be:
+- `secure: true`
+- `sameSite: 'none'`
+- `domain: your onrender domain (optional)`
+
+Test in **incognito** to bypass old cookies. Make sure cookies persist across reloads.
+
+---
+
+## ✅ 6. Live Queue Not Displaying?
+
+Double check:
+- The **auth cookie** is being sent (check in DevTools → Application → Cookies).
+- WebSocket connection is open (DevTools → Network → WS).
+- `/api/queue` returns data (DevTools → Network → XHR).
+
+---
+
+## ✅ 7. One Final Test Before Delivery
+
+1. Go to Render → Manual Deploy → Deploy latest commit
+2. Open the live link in Incognito: [https://uireplicator.onrender.com](https://uireplicator.onrender.com)
+3. Login as `beyondgrooming/password123`
+4. Try Check-In on one tab and open Dashboard on another.
+5. Make sure:
+   - Customer is **added to queue**
+   - Appears on dashboard
+   - No 401 errors in console
+   - WebSocket pings work fine
+
+---
+
+## 🧠 Final Tips
+
+- Avoid using MemoryStore even as fallback in production.
+- Don’t hardcode domains in client-side or session config — use `RENDER_EXTERNAL_HOSTNAME` when needed.
+- Use `npx vite build` and `npx esbuild` always in your script to avoid "not found" errors.
+- Clear browser cache when testing updated cookie/session logic.
+
+---
+
+Would you like me to put this in a downloadable PDF so you can keep it as a checklist?

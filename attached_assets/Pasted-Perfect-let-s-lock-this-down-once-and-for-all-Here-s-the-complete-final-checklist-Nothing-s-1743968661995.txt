@@ -1,0 +1,154 @@
+Perfect — let’s lock this down once and for all. Here’s the **complete, final checklist**. Nothing skipped. This is **everything you must ensure is correct** before the Render deployment goes live and the **Barber Dashboard shows customer queue flawlessly**.
+
+---
+
+## ✅ COMPLETE ONE-SHOT CHECKLIST (FINAL DEPLOYMENT)
+
+---
+
+### 🔧 1. **Build Failure (vite: not found)**
+
+**Root cause:** `vite` and `esbuild` are in `devDependencies` and not installed in production mode.
+
+**✔ Fix:**
+- ✅ Option A: Move `vite`, `esbuild`, `@vitejs/plugin-react`, `tailwindcss`, `postcss`, `autoprefixer`, `typescript` to `"dependencies"` in `package.json`
+- ✅ Option B (if using `render-build.sh`): Ensure `npm ci --include=dev` is run and script is set as executable with `chmod +x`
+
+🧠 **Best Practice:** Use `npx vite build` and `npx esbuild` in `render-build.sh`
+
+---
+
+### 🛠️ 2. **Render Configuration (`render.yaml`)**
+
+Make sure you have:
+
+```yaml
+services:
+  - type: web
+    name: UIReplicator
+    env: node
+    buildCommand: chmod +x render-build.sh && ./render-build.sh
+    startCommand: node dist/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        value: your-secure-secret
+      - key: RENDER_EXTERNAL_HOSTNAME
+        value: uireplicator.onrender.com
+      - key: DATABASE_URL
+        value: <from Neon>
+      - key: CLICKSEND_API_KEY
+        value: <from ClickSend>
+      - key: CLICKSEND_USERNAME
+        value: <ClickSend email>
+```
+
+---
+
+### 🧩 3. **Environment Variables on Render Dashboard**
+
+✅ Go to **Render > Environment Variables**, and confirm **ALL of these are added**:
+
+| Key                        | Value                                            |
+|----------------------------|--------------------------------------------------|
+| `NODE_ENV`                 | `production`                                     |
+| `SESSION_SECRET`           | A secure random string                           |
+| `RENDER_EXTERNAL_HOSTNAME`| `uireplicator.onrender.com`                      |
+| `DATABASE_URL`             | Your Neon DB connection string                   |
+| `CLICKSEND_USERNAME`       | Your ClickSend login                             |
+| `CLICKSEND_API_KEY`        | Your ClickSend API key                           |
+| `PGUSER`, `PGHOST`, `PGPASSWORD`, `PGDATABASE`, `PGPORT` | (Optional unless manually connecting to PG driver) |
+
+---
+
+### 🍪 4. **Session Store (No More 401 Errors)**
+
+**✅ In `server/routes.ts`**, confirm you are using `connect-pg-simple` and the session config is like:
+
+```ts
+app.use(session({
+  store: new PgSession({
+    conString: process.env.DATABASE_URL,
+  }),
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: true,
+    sameSite: 'none',
+    domain: process.env.RENDER_EXTERNAL_HOSTNAME,
+    maxAge: 24 * 60 * 60 * 1000,
+  },
+}));
+```
+
+✅ Cookie config must match modern browser rules:
+- `secure: true`
+- `sameSite: 'none'`
+- `domain: uireplicator.onrender.com`
+
+---
+
+### 🌐 5. **WebSocket Config (Live Queue Updates)**
+
+**✅ In `client/src/lib/websocket.ts`:**
+
+```ts
+const host = window.location.host;
+const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+const wsUrl = `${protocol}://${host}/ws`;
+```
+
+Also confirm:
+- 🔁 Heartbeat mechanism is enabled to prevent disconnects
+- 🔁 Reconnection logic with exponential backoff
+- ✅ Message handling supports PING/PONG
+
+---
+
+### 👁️ 6. **Dashboard Not Showing Customers**
+
+✅ Confirm these 3 things:
+
+1. **Session is being persisted**: DevTools → Application → Cookies → Check `connect.sid`
+2. **WebSocket is live**: DevTools → Network → WS → Connection is open and receiving PINGs
+3. **Data is fetched**: DevTools → Network → `/api/queue` returns `200 OK` with actual data
+
+❗If `/api/queue` returns `401`, sessions are failing → check `cookie`, `SESSION_SECRET`, and `RENDER_EXTERNAL_HOSTNAME`.
+
+---
+
+### 🧪 7. **Final Manual Test Before Release**
+
+- Go to https://uireplicator.onrender.com
+- Incognito mode (to avoid stale cookies)
+- Login: `beyondgrooming / password123`
+- Check-in from one tab
+- Dashboard (logged in) from another tab should reflect live updates
+- ✅ No 401s in Network tab
+- ✅ Queue visible in `GET /api/queue`
+
+---
+
+### ✅ 8. **Security & Performance Polish (Optional but Recommended)**
+
+- [ ] Enable HTTPS-only cookie in Render settings
+- [ ] Rotate `SESSION_SECRET` every few months
+- [ ] Disable unused routes (e.g., test routes)
+- [ ] Enable retry and logging for ClickSend failures
+- [ ] Use helmet and cors in Express for security headers
+
+---
+
+## ✅ DONE? THEN PUSH AND TEST!
+
+- [ ] Commit and push final changes to GitHub
+- [ ] Go to Render dashboard → Manual Deploy → Deploy latest commit
+- [ ] Test everything again after deployment!
+
+---
+
+Would you like me to **bundle this checklist as a PDF** so you can save it or share it with your client/team?
+
+Just say `yes` and I’ll generate it right away.

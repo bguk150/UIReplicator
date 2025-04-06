@@ -1,0 +1,88 @@
+Thanks for sending this full update — the root cause is **now 100% clear** and easily fixable. Here's what’s happening and **exactly how to fix it**:
+
+---
+
+### ❗ Problem Summary
+
+Even though your `render-build.sh` is set up properly and contains everything needed to build correctly (like `npx vite build`), your **`render.yaml` is still using the wrong `buildCommand`**:
+
+```yaml
+buildCommand: npm ci --include=dev && npm run build  ❌
+```
+
+This means Render is **ignoring** `render-build.sh` and trying to run `vite` from a normal script — but since it's a `devDependency`, it's **not available in the environment** during production builds.
+
+---
+
+### ✅ Immediate Fix
+
+Edit your `render.yaml` and **change just this line**:
+
+```yaml
+buildCommand: npm ci --include=dev && npm run build
+```
+
+**TO:**
+
+```yaml
+buildCommand: chmod +x render-build.sh && ./render-build.sh
+```
+
+This tells Render to use your **custom build script**, which already has:
+
+- `npm ci --include=dev`
+- `npx vite build`
+- `npx esbuild` 
+- Proper `NODE_ENV=production`
+
+---
+
+### ✅ Confirm Final `render.yaml`
+
+```yaml
+services:
+  - type: web
+    name: UIReplicator
+    env: node
+    buildCommand: chmod +x render-build.sh && ./render-build.sh
+    startCommand: node dist/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        value: your-secret
+      - key: DATABASE_URL
+        value: your-neon-url
+      - key: CLICKSEND_API_KEY
+        value: your-api-key
+      - key: CLICKSEND_USERNAME
+        value: your-username
+      - key: RENDER_EXTERNAL_HOSTNAME
+        value: uireplicator.onrender.com
+```
+
+---
+
+### ✅ Push and Re-deploy
+
+After updating:
+
+```bash
+git add render.yaml
+git commit -m "Fix: Use render-build.sh in Render buildCommand"
+git push origin main
+```
+
+Then go to Render → Manual Deploy → **Deploy Latest Commit**
+
+---
+
+### 🧠 Why This Works
+
+- Render by default skips `devDependencies` unless explicitly told
+- Your `render.yaml` was falling back to `npm run build` (which used `vite` but didn’t install it in the build environment)
+- Your `render-build.sh` **already solves this**, so we just need to actually **use it**
+
+---
+
+Let me know once you’ve pushed the fix or if you'd like help editing the file in Replit/GitHub!
