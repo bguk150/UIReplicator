@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { WebSocketServer } from 'ws';
 
 const app = express();
 app.use(express.json());
@@ -79,44 +80,10 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
-  });
-
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
-
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = process.env.PORT || 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-    log(`WebSocket server enabled and listening`);
-  });
-})();
-
-// Assuming WebSocketServer is imported correctly (e.g., from 'ws')
-import { WebSocketServer } from 'ws';
-
-const wss = new WebSocketServer({ 
+  // Initialize WebSocket server after HTTP server is created
+  const wss = new WebSocketServer({ 
     server,
     verifyClient: (info, callback) => {
-      // Verify session cookie
       const cookie = info.req.headers.cookie;
       if (!cookie) {
         callback(false, 401, 'Unauthorized');
@@ -127,5 +94,32 @@ const wss = new WebSocketServer({
   });
 
   wss.on("connection", (ws) => {
-    // WebSocket connection handling logic here...
+    log("WebSocket client connected");
+    ws.on("close", () => {
+      log("WebSocket client disconnected");
+    });
   });
+
+  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
+    res.status(status).json({ message });
+    throw err;
+  });
+
+  if (app.get("env") === "development") {
+    await setupVite(app, server);
+  } else {
+    serveStatic(app);
+  }
+
+  const port = process.env.PORT || 5000;
+  server.listen({
+    port,
+    host: "0.0.0.0",
+    reusePort: true,
+  }, () => {
+    log(`serving on port ${port}`);
+    log(`WebSocket server enabled and listening`);
+  });
+})();
