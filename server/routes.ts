@@ -78,36 +78,61 @@ See you soon!`;
       formattedPhone = '+44' + formattedPhone;
     }
     
-    console.log(`Formatted phone number: ${phoneNumber} → ${formattedPhone}`)
+    console.log(`Sending SMS to: ${formattedPhone}`);
+    console.log(`SMS Message: ${message}`);
     
+    // ClickSend's exact expected format for API request
     const payload = {
-      messages: [
+      "messages": [
         {
-          body: message,
-          to: formattedPhone,
-          from: "Beyond Grooming"
+          "source": "nodejs",
+          "body": message,
+          "to": formattedPhone,
+          "from": "Beyond Barber",
+          "schedule": 0,
+          "custom_string": ""
         }
       ]
     };
+    
+    console.log("SMS Payload:", JSON.stringify(payload));
+    
+    // Use proper Basic Auth format for ClickSend
+    const authString = Buffer.from(`${username}:${apiKey}`).toString("base64");
+    console.log("Using Auth Credentials:", username, "API key length:", apiKey?.length || 0);
     
     const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Basic ${Buffer.from(`${username}:${apiKey}`).toString("base64")}`
+        "Authorization": `Basic ${authString}`
       },
       body: JSON.stringify(payload)
     });
     
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("SMS API error:", errorData);
-      return { success: false, message: "Failed to send SMS" };
+    console.log("SMS API Response Status:", response.status);
+    const responseData = await response.text();
+    console.log("SMS API Raw Response:", responseData);
+    
+    let jsonData;
+    try {
+      jsonData = JSON.parse(responseData);
+    } catch (e) {
+      console.error("Failed to parse API response as JSON:", e);
+      return { success: false, message: "Invalid API response format" };
     }
     
-    const data = await response.json();
-    console.log("SMS sent successfully:", data);
-    return { success: true, message: "SMS sent successfully" };
+    // Check ClickSend's specific response format
+    if (jsonData.http_code && jsonData.http_code >= 200 && jsonData.http_code < 300) {
+      console.log("SMS sent successfully:", jsonData);
+      return { success: true, message: "SMS sent successfully" };
+    } else {
+      console.error("SMS API error:", jsonData);
+      return { 
+        success: false, 
+        message: jsonData.response_msg || "Failed to send SMS" 
+      };
+    }
   } catch (error) {
     console.error("Error sending SMS:", error);
     return { success: false, message: "Failed to send SMS" };
