@@ -105,15 +105,8 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
           <div className="mb-2 text-gray-300">{customer.service_type}</div>
           <div className="text-gray-300 flex items-center">
             <Phone className="h-4 w-4 mr-2 text-gray-400" />
-            {/* Format phone number to always display with +44 format */}
-            {customer.phone_number.startsWith('+') 
-              ? customer.phone_number 
-              : customer.phone_number.startsWith('44')
-                ? `+${customer.phone_number}`
-                : customer.phone_number.startsWith('07')
-                  ? `+44${customer.phone_number.substring(1)}`
-                  : `+44${customer.phone_number}`
-            }
+            {/* Display original phone number format */}
+            {customer.phone_number}
           </div>
         </div>
         

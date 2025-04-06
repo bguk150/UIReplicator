@@ -54,27 +54,26 @@ async function sendSMS(phoneNumber: string, name: string): Promise<{ success: bo
     // Remove all spaces, dashes, parentheses, and other non-numeric characters except +
     formattedPhone = formattedPhone.replace(/[^0-9+]/g, '');
     
-    // Converting all UK numbers to +44 format
+    // Converting all UK numbers to +44 format for SMS sending
     
-    // If it already has +44, keep it as is
-    if (formattedPhone.startsWith('+44')) {
-      // Already correct
+    // If the number starts with 7, it's a UK number without the leading 0 or country code
+    if (formattedPhone.startsWith('7') && (formattedPhone.length === 10 || formattedPhone.length === 11)) {
+      formattedPhone = '+44' + formattedPhone.replace(/^0+/, '');
+    } 
+    // If it starts with 07, it's a UK number with the leading 0
+    else if (formattedPhone.startsWith('07')) {
+      formattedPhone = '+44' + formattedPhone.substring(1);
     }
     // If it starts with 44, add a plus
     else if (formattedPhone.startsWith('44')) {
       formattedPhone = '+' + formattedPhone;
     }
-    // If it starts with 07, convert to +44
-    else if (formattedPhone.startsWith('07')) {
-      formattedPhone = '+44' + formattedPhone.substring(1);
-    }
-    // If it starts with 7 (omitting the leading 0)
-    else if (formattedPhone.startsWith('7') && formattedPhone.length === 10) {
-      formattedPhone = '+44' + formattedPhone;
-    }
-    // For any other format, force the number to be in +44 format if it's a UK number
+    // If it already has +44, keep it as is
+    else if (formattedPhone.startsWith('+44')) {
+      // Already correct
+    } 
+    // For any other format, assume it's a UK number and try to format it correctly
     else if (!formattedPhone.startsWith('+')) {
-      // If it doesn't have any country code, assume it's a UK number
       // Remove any leading zeros
       formattedPhone = formattedPhone.replace(/^0+/, '');
       formattedPhone = '+44' + formattedPhone;

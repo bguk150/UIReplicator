@@ -103,13 +103,13 @@ export default function CheckInPage() {
                         <Phone className="h-4 w-4 text-gray-500" />
                       </div>
                       <Input 
-                        placeholder="+44 7XX XXXXXXX" 
+                        placeholder="7XXXXXXXXX" 
                         className="pl-10 bg-gray-800" 
                         {...field} 
                       />
                     </div>
                   </FormControl>
-                  <p className="text-xs text-gray-400 mt-1">Use international format (+44) instead of starting with 0</p>
+                  <p className="text-xs text-gray-400 mt-1">Enter your number without the leading zero (e.g., 7823710017)</p>
                   <FormMessage />
                 </FormItem>
               )}

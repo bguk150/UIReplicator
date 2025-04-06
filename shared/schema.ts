@@ -32,7 +32,7 @@ export const queueFormSchema = insertQueueSchema.extend({
   phone_number: z.string()
     .min(10, "Phone number must be at least 10 digits")
     .max(15, "Phone number must not exceed 15 characters")
-    .regex(/^\+?44\s?7\d{1,}/, "Please use international format (+44 7XX XXXXXXX)"),
+    .regex(/^(07\d{9}|7\d{9})$/, "Please enter a valid UK mobile number (e.g., 7XXXXXXXXX)"),
 });
 
 // Login Schema
