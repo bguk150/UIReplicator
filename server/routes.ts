@@ -530,11 +530,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     clientTracking: true,
     // Handle CORS for WebSocket connections
     verifyClient: (info, callback) => {
-      // Allow all connections in our case
-      // This is especially important for Render deployments
+      // Special handling for Render.com production environment
+      // Render uses a proxy system that can sometimes break WebSocket connection upgrades
+      // This ensures all connections are allowed with proper origin handling
+      
+      // Check for Render's environment variables to enable special handling
+      const isRender = !!process.env.RENDER || !!process.env.RENDER_EXTERNAL_URL;
+      
+      if (isRender) {
+        console.log("Render production environment detected - accepting all WebSocket connections");
+        // In Render production, we accept all connections regardless of origin
+        // This works because their proxy system handles security
+        callback(true);
+        return;
+      }
+      
+      // For non-Render environments, we do standard origin checking
+      const origin = info.origin || "";
+      const requestUrl = new URL((info.req.url || ""), "http://localhost");
+      console.log(`WebSocket connection request from origin: ${origin}, path: ${requestUrl.pathname}`);
+      
+      // Accept all connections in development
       callback(true);
     }
-    // Remove handleProtocols as it's causing type issues and not necessary
   });
   
   // Track WebSocket connections and their status

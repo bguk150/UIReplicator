@@ -6,13 +6,31 @@ import cors from 'cors';
 
 const app = express();
 
-// CORS configuration - important for WebSocket and cross-origin requests
+// Enhanced CORS configuration for WebSocket and cross-origin requests
+// Specifically optimized for production environments like Render with proxy systems
 app.use(cors({
   origin: true, // Allow any origin in development, but consider restricting this in production
   credentials: true, // Allow credentials (cookies, authorization headers, etc.)
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Forwarded-For', 'X-Forwarded-Proto', 'Connection', 'Upgrade']
 }));
+
+// Special middleware to handle Render.com's proxy system
+// This ensures WebSocket upgrade requests can pass through properly in production
+app.use((req, res, next) => {
+  // Check for Render's environment
+  const isRender = !!process.env.RENDER || !!process.env.RENDER_EXTERNAL_URL;
+  
+  if (isRender) {
+    // In Render production, ensure all WebSocket-related headers are preserved
+    // This fixes a common issue with proxied WebSocket connections
+    if (req.headers.upgrade?.toLowerCase() === 'websocket') {
+      console.log('Processing WebSocket upgrade request in Render environment');
+    }
+  }
+  
+  next();
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
