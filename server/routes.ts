@@ -46,7 +46,7 @@ async function sendSMS(phoneNumber: string, name: string): Promise<{ success: bo
     }
     
     const url = "https://rest.clicksend.com/v3/sms/send";
-    const message = `Hi, it's Beyond Grooming✂️💈
+    const message = `Hi ${name}, it's Beyond Grooming✂️💈
 
 Just a heads-up – there's 1 person ahead of you in the queue! You've got 15 minutes to arrive and secure your spot in the chair.
 
@@ -55,10 +55,30 @@ Don't lose your deposit – make it on time!
 See you soon!`;
     
     // Format phone number (add country code if needed)
-    let formattedPhone = phoneNumber;
-    if (phoneNumber.startsWith("07")) {
-      formattedPhone = "+44" + phoneNumber.substring(1);
+    let formattedPhone = phoneNumber.trim();
+    
+    // Handle various UK number formats
+    // Remove all spaces, dashes, parentheses, and other non-numeric characters except +
+    formattedPhone = formattedPhone.replace(/[^0-9+]/g, '');
+    
+    // If it already has +44, keep it as is
+    if (formattedPhone.startsWith('+44')) {
+      // Already in international format
     }
+    // If it starts with 44, add a plus
+    else if (formattedPhone.startsWith('44')) {
+      formattedPhone = '+' + formattedPhone;
+    }
+    // If it starts with 07, convert to +44
+    else if (formattedPhone.startsWith('07')) {
+      formattedPhone = '+44' + formattedPhone.substring(1);
+    }
+    // If it doesn't have a country code but starts with 7 (omitting the leading 0)
+    else if (formattedPhone.startsWith('7') && formattedPhone.length === 10) {
+      formattedPhone = '+44' + formattedPhone;
+    }
+    
+    console.log(`Formatted phone number: ${phoneNumber} → ${formattedPhone}`)
     
     const payload = {
       messages: [

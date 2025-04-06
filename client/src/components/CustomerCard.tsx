@@ -2,10 +2,10 @@ import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { queueService } from "@/lib/supabase";
-import { smsService } from "@/lib/sms";
+import { useSmsNotification } from "@/lib/sms";
 import { Queue } from "@shared/schema";
 import { format } from "date-fns";
-import { CreditCard, Check, Clock, Phone } from "lucide-react";
+import { CreditCard, Check, Clock, Phone, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -15,6 +15,7 @@ interface CustomerCardProps {
 
 export default function CustomerCard({ customer }: CustomerCardProps) {
   const { toast } = useToast();
+  const { sendAlmostDoneNotification } = useSmsNotification();
   
   // Format check-in time to HH:MM:SS
   const formattedTime = format(new Date(customer.check_in_time), "HH:mm:ss");
@@ -41,26 +42,16 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
     },
   });
   
-  // Mutation for marking as almost done (sends SMS)
+  // Mutation for marking as almost done and sending SMS
   const almostDoneMutation = useMutation({
-    mutationFn: () => smsService.sendAlmostDoneNotification(customer),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/queue'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/queue/stats'] });
-      toast({
-        title: "SMS sent",
-        description: `Customer ${customer.name} has been notified`,
-        duration: 10000, // 10 seconds
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to send SMS",
-        variant: "destructive",
-        duration: 10000, // 10 seconds
-      });
-    },
+    mutationFn: () => sendAlmostDoneNotification(customer),
+    onSuccess: (result) => {
+      if (result) {
+        queryClient.invalidateQueries({ queryKey: ['/api/queue'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/queue/stats'] });
+        // Toast is already handled by the useSmsNotification hook
+      }
+    }
   });
   
   // Mutation for marking as served
@@ -119,10 +110,18 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
         </div>
         
         <div className="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0 md:ml-4">
-          {/* Status badge */}
+          {/* Status badges */}
           {customer.status === "Almost Done" && (
             <Badge variant="secondary" className="rounded-md bg-gray-700 text-gray-300 h-9 px-3 flex items-center">
               Almost Done
+            </Badge>
+          )}
+          
+          {/* SMS status badge */}
+          {customer.sms_sent === "Yes" && (
+            <Badge variant="outline" className="rounded-md bg-blue-900 text-blue-300 h-9 px-3 flex items-center">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              SMS Sent
             </Badge>
           )}
           
@@ -149,7 +148,7 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
               onClick={() => almostDoneMutation.mutate()}
               disabled={almostDoneMutation.isPending}
             >
-              <Clock className="h-4 w-4 mr-2" />
+              <MessageSquare className="h-4 w-4 mr-2" />
               Almost Done
             </Button>
           )}
