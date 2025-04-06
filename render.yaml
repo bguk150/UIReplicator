@@ -2,7 +2,7 @@ services:
   - type: web
     name: UIReplicator
     env: node
-    buildCommand: chmod +x render-build.sh && ./render-build.sh
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: node dist/index.js
     envVars:
       - key: NODE_ENV
