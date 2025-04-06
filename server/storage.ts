@@ -47,8 +47,8 @@ export class DatabaseStorage implements IStorage {
   async getAllQueueItems(): Promise<Queue[]> {
     // Return all active queue items (not served)
     try {
-      // Log the query attempt
       console.log("Fetching all active queue items from database");
+      console.log("Using database URL:", process.env.DATABASE_URL?.split('@')[1]); // Only log the host part for security
       
       const items = await db.select().from(queue)
         .where(ne(queue.status, "Served"))
