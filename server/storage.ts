@@ -51,11 +51,11 @@ export class DatabaseStorage implements IStorage {
       
       const items = await db.select().from(queue)
         .where(ne(queue.status, "Served"))
+        .orderBy(asc(queue.check_in_time))
         .catch(err => {
           console.error("Database query error:", err);
           return [];
         });
-        .orderBy(asc(queue.check_in_time));
       
       console.log(`Retrieved ${items.length} active queue items`);
       return items;
