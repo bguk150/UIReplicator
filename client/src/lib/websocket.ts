@@ -29,18 +29,7 @@ class WebSocketManager {
 
     // Reset connection attempts on manual reconnect
     if (isManualReconnect) {
-      console.log('Manual reconnect triggered');
-      this.connectionAttempts = 0;
-    }
-
-    // Reset connection attempts on manual reconnect
-    if (isManualReconnect) {
-      this.connectionAttempts = 0;
-      console.log("Manual reconnect triggered - resetting connection attempts");
-    }
-    
-    // Reset connection attempts if manually reconnecting
-    if (isManualReconnect) {
+      console.log('Manual reconnect triggered - resetting connection attempts');
       this.connectionAttempts = 0;
     }
     
@@ -193,6 +182,7 @@ export const webSocketManager = new WebSocketManager();
 // React hook to use WebSocket in components
 export function useQueueUpdates(callback?: Listener) {
   const callbackRef = useRef(callback);
+  const initialConnectionRef = useRef(false);
   
   // Update ref whenever callback changes
   useEffect(() => {
@@ -201,8 +191,11 @@ export function useQueueUpdates(callback?: Listener) {
 
   // Connect to WebSocket when component mounts
   useEffect(() => {
-    // Initial connection
-    webSocketManager.connect();
+    // Only connect once on initial mount
+    if (!initialConnectionRef.current) {
+      initialConnectionRef.current = true;
+      webSocketManager.connect();
+    }
     
     // Force an initial data refresh
     webSocketManager.refreshQueueData();
@@ -226,6 +219,8 @@ export function useQueueUpdates(callback?: Listener) {
     return () => {
       clearInterval(periodicRefresh);
       unsubscribe();
+      // Don't disconnect the WebSocket on component unmount
+      // This allows it to stay connected as a singleton
     };
   }, []);
   

@@ -19,18 +19,14 @@ export default function NavBar({ currentPath }: NavBarProps) {
         </div>
         
         <div className="flex items-center space-x-4">
-          <Link href="/">
-            <a className={`py-2 px-3 rounded hover:bg-gray-800 transition-colors ${currentPath === '/' ? 'bg-gray-800' : ''}`}>
-              Check In
-            </a>
+          <Link href="/" className={`py-2 px-3 rounded hover:bg-gray-800 transition-colors ${currentPath === '/' ? 'bg-gray-800' : ''}`}>
+            Check In
           </Link>
           
           {isLoggedIn ? (
             <>
-              <Link href="/dashboard">
-                <a className={`py-2 px-3 rounded hover:bg-gray-800 transition-colors ${currentPath === '/dashboard' ? 'bg-gray-800' : ''}`}>
-                  Barber Dashboard
-                </a>
+              <Link href="/dashboard" className={`py-2 px-3 rounded hover:bg-gray-800 transition-colors ${currentPath === '/dashboard' ? 'bg-gray-800' : ''}`}>
+                Barber Dashboard
               </Link>
               
               <Button 
@@ -44,10 +40,8 @@ export default function NavBar({ currentPath }: NavBarProps) {
               </Button>
             </>
           ) : (
-            <Link href="/login">
-              <a className={`py-2 px-3 rounded hover:bg-gray-800 transition-colors ${currentPath === '/login' ? 'bg-gray-800' : ''}`}>
-                Barber Dashboard
-              </a>
+            <Link href="/login" className={`py-2 px-3 rounded hover:bg-gray-800 transition-colors ${currentPath === '/login' ? 'bg-gray-800' : ''}`}>
+              Barber Dashboard
             </Link>
           )}
         </div>

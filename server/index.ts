@@ -100,34 +100,9 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  // Initialize WebSocket server after HTTP server is created
-  const wss = new WebSocketServer({ 
-    noServer: true, // Detaches WebSocket from HTTP server
-    // We'll handle verification in the upgrade event instead
-  });
-
-  wss.on("connection", (ws) => {
-    log("WebSocket client connected");
-    ws.on("close", () => {
-      log("WebSocket client disconnected");
-    });
-  });
-
-  server.on("upgrade", (request, socket, head) => {
-    // The request object is already the HTTP request, not an info object
-    const cookie = request.headers.cookie;
-    
-    if (!cookie) {
-      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-      socket.destroy();
-      return;
-    }
-    
-    // If we reach here, the client is authorized
-    wss.handleUpgrade(request, socket, head, (ws) => {
-      wss.emit("connection", ws, request);
-    });
-  });
+  // We're already setting up WebSocket server in routes.ts, 
+  // so we don't need to create another one here.
+  // The WebSocket server in routes.ts is using the same HTTP server instance.
 
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
