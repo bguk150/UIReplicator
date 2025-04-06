@@ -173,6 +173,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/queue', async (req, res) => {
     try {
       const data = queueFormSchema.parse(req.body);
+      
+      // Check if phone number already exists in active queue (not served)
+      const activeQueue = await storage.getQueueByStatus("Waiting");
+      const almostDoneQueue = await storage.getQueueByStatus("Almost Done");
+      
+      // Combine both "Waiting" and "Almost Done" customers for the check
+      const activeCustomers = [...activeQueue, ...almostDoneQueue];
+      
+      // Check if phone number already exists in active queue
+      const existingCustomer = activeCustomers.find(
+        customer => customer.phone_number === data.phone_number
+      );
+      
+      if (existingCustomer) {
+        return res.status(400).json({ 
+          message: "This phone number is already in the queue. Please wait until your turn is complete." 
+        });
+      }
+      
+      // Check if the number has checked in 3 times today already
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      // Get all queue entries for this phone number today (including served ones)
+      const todaysQueue = await storage.getAllQueueItems();
+      const sameDayEntries = todaysQueue.filter(item => 
+        item.phone_number === data.phone_number && 
+        new Date(item.check_in_time) >= startOfDay
+      );
+      
+      if (sameDayEntries.length >= 3) {
+        return res.status(400).json({ 
+          message: "You've already checked in 3 times today. Please try again tomorrow." 
+        });
+      }
+      
+      // If all checks pass, insert the queue item
       const queueItem = await storage.insertQueueItem(data);
       
       // Broadcast update to all connected clients
