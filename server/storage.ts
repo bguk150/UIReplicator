@@ -10,13 +10,13 @@ export interface IStorage {
   getQueueItemById(id: number): Promise<Queue | undefined>;
   insertQueueItem(item: InsertQueue): Promise<Queue>;
   updateQueueItem(id: number, updates: Partial<Queue>): Promise<Queue | undefined>;
-  
+
   // User (Barber) methods
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   verifyUserCredentials(username: string, password: string): Promise<User | undefined>;
-  
+
   // Stats methods
   getQueueStats(): Promise<{ waiting: number, almostDone: number, total: number }>;
 }
@@ -48,7 +48,7 @@ export class DatabaseStorage implements IStorage {
     // Return all active queue items (not served)
     try {
       console.log("Fetching all active queue items from database");
-      
+
       const items = await db.select().from(queue)
         .where(ne(queue.status, "Served"))
         .orderBy(asc(queue.check_in_time))
@@ -56,7 +56,7 @@ export class DatabaseStorage implements IStorage {
           console.error("Database query error:", err);
           return [];
         });
-      
+
       console.log(`Retrieved ${items.length} active queue items`);
       return items;
     } catch (error) {
@@ -78,7 +78,7 @@ export class DatabaseStorage implements IStorage {
 
   async insertQueueItem(item: InsertQueue): Promise<Queue> {
     const now = new Date();
-    
+
     const [queueItem] = await db.insert(queue).values({
       ...item,
       check_in_time: now,
@@ -86,7 +86,7 @@ export class DatabaseStorage implements IStorage {
       payment_verified: item.payment_method === "Card" ? "Yes" : "No", // Card payments are auto-verified
       sms_sent: "No"
     }).returning();
-    
+
     return queueItem;
   }
 
@@ -95,7 +95,7 @@ export class DatabaseStorage implements IStorage {
       .set(updates)
       .where(eq(queue.id, id))
       .returning();
-    
+
     return updatedItem || undefined;
   }
 
@@ -121,12 +121,12 @@ export class DatabaseStorage implements IStorage {
   async verifyUserCredentials(username: string, password: string): Promise<User | undefined> {
     const user = await this.getUserByUsername(username);
     if (!user) return undefined;
-    
+
     // In a real app, this would use bcrypt.compare or similar
     if (user.password === password) {
       return user;
     }
-    
+
     return undefined;
   }
 
@@ -136,7 +136,7 @@ export class DatabaseStorage implements IStorage {
     const almostDoneItems = await this.getQueueByStatus("Almost Done");
     const activeItems = await db.select().from(queue)
       .where(ne(queue.status, "Served"));
-    
+
     return {
       waiting: waitingItems.length,
       almostDone: almostDoneItems.length,

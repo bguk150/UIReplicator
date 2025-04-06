@@ -14,20 +14,20 @@ export default function BarberDashboard() {
   const { toast } = useToast();
   const [refreshKey, setRefreshKey] = useState(0);
   const [wsConnected, setWsConnected] = useState(false);
-  
+
   // Set up queue updates via WebSocket
   const websocket = useQueueUpdates(useCallback(() => {
     // This callback runs when WebSocket receives updates
     refetchQueue();
     refetchStats();
-    
+
     toast({
       title: "Queue Updated",
       description: null, // Removing description for cleaner notification
       duration: 1000, // 1 second
     });
   }, []));
-  
+
   // Effect to monitor WebSocket connection status
   useEffect(() => {
     // Check connection status every 5 seconds
@@ -35,10 +35,10 @@ export default function BarberDashboard() {
       const isConnected = websocket.socket?.readyState === WebSocket.OPEN;
       setWsConnected(isConnected);
     }, 5000);
-    
+
     return () => clearInterval(intervalId);
   }, [websocket]);
-  
+
   // Query for fetching queue data
   const { 
     data: queueData, 
@@ -46,13 +46,13 @@ export default function BarberDashboard() {
     refetch: refetchQueue
   } = useQuery<Queue[]>({
     queryKey: ['/api/queue', refreshKey],
-    refetchInterval: wsConnected ? false : 30000, // Only poll if WebSocket is down
+    refetchInterval: 30000, // Poll every 30 seconds regardless of WebSocket
     staleTime: 10000, // Keep data fresh for at least 10 seconds
     initialData: [], // Default empty array to avoid type errors
     retry: 3, // Retry failed requests 3 times
     refetchOnWindowFocus: true, // Refresh when user focuses the window
   });
-  
+
   // Query for queue stats
   const { 
     data: statsData, 
@@ -60,13 +60,13 @@ export default function BarberDashboard() {
     refetch: refetchStats
   } = useQuery<{ waiting: number, almostDone: number, total: number }>({
     queryKey: ['/api/queue/stats', refreshKey],
-    refetchInterval: wsConnected ? false : 30000, // Only poll if WebSocket is down
+    refetchInterval: 30000, // Poll every 30 seconds regardless of WebSocket
     staleTime: 10000, // Keep data fresh for at least 10 seconds
     initialData: { waiting: 0, almostDone: 0, total: 0 }, // Default values
     retry: 3, // Retry failed requests 3 times
     refetchOnWindowFocus: true, // Refresh when user focuses the window
   });
-  
+
   // Handle manual refresh
   const handleRefresh = async () => {
     toast({
@@ -74,12 +74,12 @@ export default function BarberDashboard() {
       description: null,
       duration: 1000, // 1 second
     });
-    
+
     try {
       await refetchQueue();
       await refetchStats();
       setRefreshKey(prev => prev + 1);
-      
+
       // Also try to reconnect WebSocket if it's down
       if (!wsConnected) {
         websocket.connect(true); // true indicates manual reconnection
@@ -93,21 +93,21 @@ export default function BarberDashboard() {
       });
     }
   };
-  
+
   // Format the queue data to display active customers first
   const sortedQueue = queueData ? [...queueData].sort((a, b) => {
     // First, sort by status (Waiting first, then Almost Done)
     if (a.status === "Waiting" && b.status !== "Waiting") return -1;
     if (a.status !== "Waiting" && b.status === "Waiting") return 1;
-    
+
     // Then by check-in time (oldest first)
     return new Date(a.check_in_time).getTime() - new Date(b.check_in_time).getTime();
   }) : [];
-  
+
   return (
     <div className="mb-8">
       <h1 className="text-3xl font-bold mb-6">Barber Dashboard</h1>
-      
+
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center">
           {wsConnected ? (
@@ -131,7 +131,7 @@ export default function BarberDashboard() {
           Refresh
         </Button>
       </div>
-      
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         {isStatsLoading ? (
@@ -156,7 +156,7 @@ export default function BarberDashboard() {
           </>
         )}
       </div>
-      
+
       {/* Customer Queue */}
       <div className="space-y-5">
         {isQueueLoading ? (
