@@ -7,3 +7,13 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: SESSION_SECRET
+        value: your-secure-secret
+      - key: RENDER_EXTERNAL_HOSTNAME
+        value: uireplicator.onrender.com
+      - key: DATABASE_URL
+        value: "${DATABASE_URL}"
+      - key: CLICKSEND_API_KEY
+        value: "${CLICKSEND_API_KEY}"
+      - key: CLICKSEND_USERNAME
+        value: "${CLICKSEND_USERNAME}"
