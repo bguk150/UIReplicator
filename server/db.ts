@@ -30,13 +30,22 @@ const MAX_RETRIES = 5;
 const RETRY_DELAY = 5000; // 5 seconds
 
 // Optimize pool settings for Neon serverless in production
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV === 'production' || 
+                    !!process.env.RENDER || 
+                    !!process.env.RENDER_EXTERNAL_URL;
+
+// Special handling for Render.com - they have specific requirements for proper connection pooling
+const isRender = !!process.env.RENDER || !!process.env.RENDER_EXTERNAL_URL;
+
+// Log the detected environment
+console.log(`Database configuration for: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}${isRender ? ' (Render)' : ''}`);
 
 export const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }, // Always use SSL with Neon
-  max: isProduction ? 10 : 20, // Reduced max connections in production to prevent overloading
-  idleTimeoutMillis: isProduction ? 10000 : 30000, // Close idle clients faster in production
+  // Render-specific optimizations for Neon serverless
+  max: isRender ? 5 : (isProduction ? 10 : 20), // Very conservative pool size for Render
+  idleTimeoutMillis: isRender ? 5000 : (isProduction ? 10000 : 30000), // Very aggressive timeout for Render
   connectionTimeoutMillis: 5000, // Return an error after 5 seconds if connection couldn't be established
   allowExitOnIdle: true, // Allow idle clients to be closed automatically
 });

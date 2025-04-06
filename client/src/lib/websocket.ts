@@ -57,8 +57,18 @@ class WebSocketManager {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const host = window.location.host;
     
-    // For render.com deployments, we need to ensure we're using the right domain
-    // Render uses .onrender.com domains and WebSockets need to connect to the same domain
+    // Special handling for production environments (especially Render)
+    // This ensures we use the correct domain regardless of Render's specific domain structure
+    const isProduction = window.location.hostname.includes('onrender.com') || 
+                         window.location.hostname.includes('replit.app');
+    
+    // Enhanced logging for production troubleshooting
+    if (isProduction) {
+      console.log('Production environment detected on:', window.location.hostname);
+      // For production, add a longer timeout and more reconnection attempts
+      this.maxReconnectAttempts = 10;
+    }
+    
     const wsUrl = `${protocol}//${host}/ws`;
     
     console.log('Connecting to WebSocket at:', wsUrl); // Debug log

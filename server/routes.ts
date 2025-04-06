@@ -188,7 +188,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     !!process.env.RENDER || 
     !!process.env.RENDER_EXTERNAL_URL;
   
-  console.log(`Environment detected: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
+  // Special handling for Render.com deployment
+  const isRender = !!process.env.RENDER || !!process.env.RENDER_EXTERNAL_URL;
+  
+  console.log(`Environment detected: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}${isRender ? ' (Render)' : ''}`);
   console.log(`Node ENV: ${process.env.NODE_ENV}`);
   
   // Force use PostgreSQL session store in production
@@ -233,7 +236,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           sameSite: isProduction ? 'none' : 'lax', // Proper cross-site cookie handling
           maxAge: 24 * 60 * 60 * 1000, // 24 hours
           path: '/',
-          httpOnly: true
+          httpOnly: true,
+          // Render.com specific cookie settings for production security
+          ...(isRender ? {
+            domain: process.env.RENDER_EXTERNAL_HOSTNAME || undefined
+          } : {})
         },
         name: 'beyond.sid' // Custom name to avoid the default connect.sid
       }));
@@ -262,7 +269,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sameSite: isProduction ? 'none' : 'lax',
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
         path: '/',
-        httpOnly: true
+        httpOnly: true,
+        // Render.com specific cookie settings for production security
+        ...(isRender ? {
+          domain: process.env.RENDER_EXTERNAL_HOSTNAME || undefined
+        } : {})
       },
       store: new SessionStore({
         checkPeriod: 86400000 // 24 hours
