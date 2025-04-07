@@ -84,7 +84,7 @@ export class DatabaseStorage implements IStorage {
       ...item,
       check_in_time: now,
       status: "Waiting",
-      payment_verified: item.payment_method === "Card" ? "Yes" : "No", // Card payments are auto-verified
+      payment_verified: "No", // All payments require manual verification
       sms_sent: "No"
     }).returning();
 
