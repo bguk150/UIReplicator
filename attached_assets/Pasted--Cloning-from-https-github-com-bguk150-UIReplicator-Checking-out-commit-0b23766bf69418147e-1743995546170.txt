@@ -1,0 +1,60 @@
+==> Cloning from https://github.com/bguk150/UIReplicator
+==> Checking out commit 0b23766bf69418147ed3c652848c6aba84af7f90 in branch main
+==> Downloading cache...
+==> Transferred 211MB in 9s. Extraction took 4s.
+==> Using Node.js version 22.14.0 (default)
+==> Docs on specifying a Node.js version: https://render.com/docs/node-version
+==> Using Bun version 1.1.0 (default)
+==> Docs on specifying a bun version: https://render.com/docs/bun-version
+==> Running build command 'npm install --include=dev && npm run build'...
+up to date, audited 524 packages in 1s
+65 packages are looking for funding
+  run `npm fund` for details
+7 moderate severity vulnerabilities
+To address issues that do not require attention, run:
+  npm audit fix
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+Run `npm audit` for details.
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+vite v5.4.17 building for production...
+transforming...
+✓ 2140 modules transformed.
+rendering chunks...
+computing gzip size...
+../dist/public/index.html                   3.80 kB │ gzip:   1.43 kB
+../dist/public/assets/index-DiJTj7_6.css   59.24 kB │ gzip:  10.61 kB
+../dist/public/assets/index-BuJQ643x.js   488.86 kB │ gzip: 150.10 kB
+✓ built in 4.07s
+  dist/index.js  37.3kb
+⚡ Done in 6ms
+==> Uploading build...
+==> Uploaded in 7.0s. Compression took 3.2s
+==> Build successful 🎉
+==> Deploying...
+==> Running 'npm run start'
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+Database configuration for: PRODUCTION (Render)
+Attempting database connection...
+Enabled 'trust proxy' for production environment
+Database configuration for: PRODUCTION (Render)
+Environment detected: PRODUCTION (Render)
+Node ENV: production
+Initializing PostgreSQL session store for production
+Database connected successfully
+Database URL domain: ep-spring-cherry-a6a3mhmh.us-west-2.aws.neon.tech
+PostgreSQL session store initialized successfully
+PostgreSQL session middleware configured
+3:08:54 AM [express] Setting up in production mode for stability
+HTTP server is now listening, initializing WebSocket server
+WebSocket server environment details:
+- NODE_ENV: production
+- Render detection: true
+- Server port: 10000
+WebSocket server initialized on path: /ws after HTTP server started
+3:08:54 AM [express] Server started in production mode
+3:08:54 AM [express] Listening on port 10000
+3:08:54 AM [express] WebSocket server enabled and listening
+==> Your service is live 🎉

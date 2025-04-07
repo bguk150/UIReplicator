@@ -186,10 +186,6 @@ export default function CheckInPage() {
                                 <span>{service.name}</span>
                                 <Badge variant="secondary" className="ml-2">{service.price}</Badge>
                               </div>
-                              <div className="text-xs text-gray-500 mt-1 flex items-center">
-                                <Clock className="h-3 w-3 mr-1 inline" /> 
-                                <span>{service.duration}</span>
-                              </div>
                             </SelectItem>
                           ))}
                           <Separator className="my-1" />

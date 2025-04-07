@@ -110,7 +110,13 @@ async function sendSMS(phoneNumber: string, name: string): Promise<{ success: bo
     }
     
     const url = "https://rest.clicksend.com/v3/sms/send";
-    const message = `Beyond Grooming: Hi ${name}, you're almost up! Only 1 person ahead in the queue. Please arrive within 15 minutes to keep your spot. Thank you!`;
+    const message = `Hi, it's Beyond Grooming✂️💈
+
+Just a heads-up – there's 1 person ahead of you in the queue! You've got 15 minutes to arrive and secure your spot in the chair.
+
+Don't lose your deposit – make it on time!
+
+See you soon!`;
     
     // Format phone number to always use +44 for UK numbers
     let formattedPhone = phoneNumber.trim();
