@@ -157,6 +157,26 @@ export default function BarberDashboard() {
         </Button>
       </div>
 
+      {/* Tabs for Queue and Customer Database */}
+      <div className="flex gap-4 mb-6">
+        <Button
+          onClick={() => setActiveTab("queue")}
+          variant={activeTab === "queue" ? "default" : "outline"}
+          className="flex-1 py-6"
+        >
+          <Users className="mr-2 h-5 w-5" />
+          Active Queue
+        </Button>
+        <Button
+          onClick={() => setActiveTab("database")}
+          variant={activeTab === "database" ? "default" : "outline"}
+          className="flex-1 py-6"
+        >
+          <ClipboardList className="mr-2 h-5 w-5" />
+          Customer Database
+        </Button>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         {isStatsLoading ? (
@@ -180,32 +200,6 @@ export default function BarberDashboard() {
             />
           </>
         )}
-      </div>
-
-      {/* Tabs for Queue and Customer Database */}
-      <div className="border-b mb-6">
-        <div className="flex space-x-4">
-          <button
-            onClick={() => setActiveTab("queue")}
-            className={`py-2 px-4 font-medium ${
-              activeTab === "queue"
-                ? "border-b-2 border-primary text-primary"
-                : "text-muted-foreground"
-            }`}
-          >
-            Active Queue
-          </button>
-          <button
-            onClick={() => setActiveTab("database")}
-            className={`py-2 px-4 font-medium ${
-              activeTab === "database"
-                ? "border-b-2 border-primary text-primary"
-                : "text-muted-foreground"
-            }`}
-          >
-            Customer Database
-          </button>
-        </div>
       </div>
       
       {activeTab === "queue" && (
