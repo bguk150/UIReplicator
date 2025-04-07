@@ -1,8 +1,9 @@
 /**
- * This script is called by the Replit workflow
- * It determines whether to build and run the app or use the static server
+ * Custom workflow script for Replit
+ * This script handles building and running the application in a way
+ * that works with Replit's environment
  */
-import { execSync } from 'child_process';
+import { execSync, spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -11,36 +12,38 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-console.log('💈 Beyond Grooming Workflow 💈');
-
 // Set production environment
 process.env.NODE_ENV = 'production';
 
-const distDir = path.join(__dirname, 'dist');
-const publicDir = path.join(distDir, 'public');
-const shouldBuild = !fs.existsSync(publicDir) || process.argv.includes('--rebuild');
+// Check if we need to build the application first
+const buildDir = path.join(__dirname, 'dist', 'public');
+const buildNeeded = !fs.existsSync(buildDir) || 
+                   process.argv.includes('--force-build');
 
-// Build the app if necessary
-if (shouldBuild) {
+// Build the application if needed
+if (buildNeeded) {
   console.log('📦 Building application...');
   try {
+    // Build the frontend
     execSync('npm run build', { stdio: 'inherit' });
-    console.log('✅ Build complete!');
+    console.log('✅ Build completed successfully!');
   } catch (error) {
     console.error('❌ Build failed:', error);
     process.exit(1);
   }
 }
 
-// Start the static server
-console.log('🚀 Starting server...');
+// Start the server
+console.log('🚀 Starting server in production mode...');
+
 try {
   // Use dynamic import for ES modules
   const staticServer = await import('./dist/static-server.js');
+  console.log('⭐ Server started successfully!');
 } catch (error) {
   console.error('❌ Server failed to start:', error);
   process.exit(1);
 }
 
-// Export for dynamic imports
+// Export for ES modules
 export {};

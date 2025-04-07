@@ -1,70 +1,74 @@
-// This script builds and runs the static server
-import { execSync } from "child_process";
-import { spawn } from "child_process";
-import { existsSync, mkdirSync } from "fs";
-import path from "path";
+/**
+ * Enhanced static file server runner for Replit and Render
+ * This script handles both build and runtime for production environments
+ */
 
-// Make sure dist directory exists
-const distDir = path.resolve("dist");
-const publicDir = path.resolve(distDir, "public");
+import fs from 'fs';
+import path from 'path';
+import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
 
-if (!existsSync(distDir)) {
-  console.log("Creating dist directory...");
-  mkdirSync(distDir, { recursive: true });
+// Get current file directory (equivalent to __dirname in CommonJS)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Configure environment
+process.env.NODE_ENV = 'production';
+
+// Check if we have a database URL
+if (!process.env.DATABASE_URL) {
+  console.warn('⚠️ WARNING: DATABASE_URL environment variable is not set.');
+  console.warn('Database functionality will be limited or unavailable.');
 }
 
-if (!existsSync(publicDir)) {
-  console.log("Creating dist/public directory...");
-  mkdirSync(publicDir, { recursive: true });
+// Check if ClickSend credentials are available
+if (!process.env.CLICKSEND_USERNAME || !process.env.CLICKSEND_API_KEY) {
+  console.warn('⚠️ WARNING: ClickSend credentials are not set.');
+  console.warn('SMS notification functionality will be unavailable.');
 }
 
-console.log("Starting build process...");
-try {
-  // Build the client application
-  console.log("Building client with vite...");
-  execSync("npm run build", { stdio: "inherit" });
-  
-  // Build the static server
-  console.log("Building static server with esbuild...");
-  execSync("esbuild server/static-server.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/static-server.js", { stdio: "inherit" });
-  
-  console.log("Build completed successfully!");
-} catch (error) {
-  console.error("Build failed:", error);
-  process.exit(1);
-}
+// Paths
+const distDir = path.join(__dirname, 'dist');
+const publicDir = path.join(distDir, 'public');
+const indexHtml = path.join(publicDir, 'index.html');
+const staticServerJs = path.join(distDir, 'static-server.js');
 
-// Set production environment
-process.env.NODE_ENV = "production";
+// Check if we need to build
+const needsBuild = !fs.existsSync(indexHtml) || !fs.existsSync(staticServerJs);
 
-console.log("Starting static server in production mode...");
-// Start the static server with production environment
-const server = spawn("node", ["dist/static-server.js"], {
-  env: { ...process.env, NODE_ENV: "production" },
-  stdio: "inherit"
-});
-
-server.on("error", (error) => {
-  console.error("Failed to start server:", error);
-  process.exit(1);
-});
-
-server.on("exit", (code) => {
-  if (code !== 0) {
-    console.error(`Server exited with code ${code}`);
-    process.exit(code || 1);
+// Build the application if needed
+if (needsBuild) {
+  console.log('📦 Building application...');
+  try {
+    execSync('npm run build', { stdio: 'inherit' });
+    console.log('✅ Build completed successfully!');
+  } catch (error) {
+    console.error('❌ Build failed:', error);
+    process.exit(1);
   }
+}
+
+// Start the static server
+console.log('🚀 Starting server in production mode...');
+
+try {
+  // Dynamically import the static server
+  const startTime = Date.now();
+  const staticServer = await import('./dist/static-server.js');
+  const loadTime = Date.now() - startTime;
+  console.log(`⭐ Server module loaded in ${loadTime}ms`);
+} catch (error) {
+  console.error('❌ Server failed to start:', error);
+  process.exit(1);
+}
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err);
 });
 
-// Handle process termination
-process.on("SIGINT", () => {
-  console.log("Shutting down server...");
-  server.kill("SIGINT");
-  process.exit(0);
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled rejection at:', promise, 'reason:', reason);
 });
 
-process.on("SIGTERM", () => {
-  console.log("Shutting down server...");
-  server.kill("SIGTERM");
-  process.exit(0);
-});
+// For module compatibility
+export {};

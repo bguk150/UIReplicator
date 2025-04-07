@@ -1,18 +1,30 @@
 #!/bin/bash
 
-# Set environment variables
-export NODE_ENV=development
-# Disable the Replit cartographer plugin to avoid build errors
-export CARTOGRAPHER_DISABLE=true 
+# Beyond Grooming - Dev Build & Run wrapper
+# This script intelligently handles the development environment
+echo "💈 Beyond Grooming - Dev Build & Run 💈"
 
-echo "Building client for development..."
-npx vite build
-
-if [ $? -eq 0 ]; then
-  echo "Client built successfully!"
-  echo "Starting server in development mode..."
-  npx tsx server/index.ts
+# Check if we're in Replit
+if [ -n "$REPL_ID" ] && [ -n "$REPL_OWNER" ]; then
+  echo "🔄 Detected Replit environment, using production mode..."
+  export NODE_ENV=production
+  
+  # Check if we need to build
+  if [ ! -d "dist/public" ] || [ ! -f "dist/static-server.js" ]; then
+    echo "📦 Building application..."
+    npm run build
+    
+    if [ $? -ne 0 ]; then
+      echo "❌ Build failed!"
+      exit 1
+    fi
+  fi
+  
+  # Start the static server
+  echo "🚀 Starting server in Replit environment..."
+  node dist/static-server.js
 else
-  echo "Client build failed!"
-  exit 1
+  # In regular development mode
+  echo "🔄 Running in standard development mode..."
+  tsx server/index.ts
 fi

@@ -1,17 +1,21 @@
 #!/bin/bash
-# Build script for both client and server
 
-echo "Starting build process..."
+# Build script for Beyond Grooming
+echo "💈 Beyond Grooming - Build Script 💈"
 
-# Make sure dist directory exists
-mkdir -p dist/public
+# Set production environment
+export NODE_ENV=production
 
-# Build the client application
-echo "Building client with vite..."
+# Build the application
+echo "📦 Building application..."
+
+# Build the frontend and backend
 npm run build
 
-# Build the static server
-echo "Building static server with esbuild..."
-npx esbuild server/static-server.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/static-server.js
+if [ $? -ne 0 ]; then
+  echo "❌ Build failed!"
+  exit 1
+fi
 
-echo "Build completed successfully!"
+echo "✅ Build completed successfully!"
+echo "✨ Build artifacts are in the dist/ directory"
