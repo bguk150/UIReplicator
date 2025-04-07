@@ -12,6 +12,7 @@ export const queue = pgTable("queue", {
   service_category: text("service_category").default(""),
   selected_extras: text("selected_extras").default(""),
   payment_method: text("payment_method").notNull(),
+  marketing_sms: text("marketing_sms").default("No").notNull(),
   check_in_time: timestamp("check_in_time").defaultNow().notNull(),
   status: text("status").default("Waiting").notNull(),
   payment_verified: text("payment_verified").default("No").notNull(),
@@ -39,6 +40,8 @@ export const queueFormSchema = insertQueueSchema.extend({
   service_price: z.string().min(1, "Service price is required"),
   service_category: z.string().min(1, "Service category is required"),
   selected_extras: z.string().optional().default(""),
+  marketing_sms: z.string().refine(val => val === "Yes" || val === "No", 
+    "You must select whether to receive marketing SMS").default("No"),
 });
 
 // Login Schema

@@ -132,6 +132,12 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
             {/* Display original phone number format */}
             {customer.phone_number}
           </div>
+          
+          {customer.marketing_sms === "Yes" && (
+            <div className="text-xs text-green-400 ml-6 mt-1">
+              Marketing: Opted in
+            </div>
+          )}
         </div>
         
         <div className="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0 md:ml-4">

@@ -11,6 +11,7 @@ import { serviceMenu, getServicePriceByName, getServiceCategoryByName, Service }
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Select, 
   SelectContent, 
@@ -43,6 +44,7 @@ export default function CheckInPage() {
       service_category: "",
       selected_extras: "",
       payment_method: "Cash",
+      marketing_sms: "No",
     },
   });
   
@@ -76,6 +78,7 @@ export default function CheckInPage() {
         service_category: "",
         selected_extras: "",
         payment_method: "Cash",
+        marketing_sms: "No",
       });
       setPaymentMethod("Cash");
       setSelectedService(null);
@@ -350,6 +353,32 @@ export default function CheckInPage() {
                     >
                       <CreditCard className="h-4 w-4 mr-2" /> Card
                     </Button>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="marketing_sms"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border border-gray-700 p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value === "Yes"}
+                      onCheckedChange={(checked) => {
+                        field.onChange(checked ? "Yes" : "No");
+                      }}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="text-sm font-medium leading-none">
+                      Receive SMS Marketing
+                    </FormLabel>
+                    <p className="text-sm text-gray-400">
+                      I agree to receive promotional messages and updates
+                    </p>
                   </div>
                   <FormMessage />
                 </FormItem>
