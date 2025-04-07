@@ -40,8 +40,9 @@ export const queueFormSchema = insertQueueSchema.extend({
   service_price: z.string().min(1, "Service price is required"),
   service_category: z.string().min(1, "Service category is required"),
   selected_extras: z.string().optional().default(""),
-  marketing_sms: z.string().refine(val => val === "Yes" || val === "No", 
-    "You must select whether to receive marketing SMS").default("No"),
+  marketing_sms: z.string()
+    .refine(val => val === "Yes", "You must agree to receive marketing SMS")
+    .default("No"),
 });
 
 // Login Schema

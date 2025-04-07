@@ -44,7 +44,7 @@ export default function CheckInPage() {
       service_category: "",
       selected_extras: "",
       payment_method: "Cash",
-      marketing_sms: "No",
+      marketing_sms: "Yes", // Changed default to Yes since it's required
     },
   });
   
@@ -78,7 +78,7 @@ export default function CheckInPage() {
         service_category: "",
         selected_extras: "",
         payment_method: "Cash",
-        marketing_sms: "No",
+        marketing_sms: "Yes", // Changed to Yes to match the required value
       });
       setPaymentMethod("Cash");
       setSelectedService(null);
@@ -367,6 +367,7 @@ export default function CheckInPage() {
                   <FormControl>
                     <Checkbox
                       checked={field.value === "Yes"}
+                      defaultChecked={true}
                       onCheckedChange={(checked) => {
                         field.onChange(checked ? "Yes" : "No");
                       }}
@@ -374,10 +375,10 @@ export default function CheckInPage() {
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel className="text-sm font-medium leading-none">
-                      Receive SMS Marketing
+                      Receive SMS Marketing <span className="text-red-400">*</span>
                     </FormLabel>
                     <p className="text-sm text-gray-400">
-                      I agree to receive promotional messages and updates
+                      I agree to receive promotional messages and updates (required)
                     </p>
                   </div>
                   <FormMessage />

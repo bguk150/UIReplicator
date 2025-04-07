@@ -1,0 +1,213 @@
+
+transforming...
+✓ 2150 modules transformed.
+rendering chunks...
+computing gzip size...
+../dist/public/index.html                   3.80 kB │ gzip:   1.43 kB
+../dist/public/assets/index-DyG0-NlE.css   60.47 kB │ gzip:  10.74 kB
+../dist/public/assets/index-92LBqXSs.js   511.24 kB │ gzip: 156.73 kB
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 4.27s
+  dist/index.js  38.7kb
+⚡ Done in 6ms
+==> Uploading build...
+==> Uploaded in 5.4s. Compression took 3.3s
+==> Build successful 🎉
+==> Deploying...
+==> Running 'npm run start'
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+Database configuration for: PRODUCTION (Render)
+Attempting database connection...
+Enabled 'trust proxy' for production environment
+Database configuration for: PRODUCTION (Render)
+Environment detected: PRODUCTION (Render)
+Node ENV: production
+Initializing PostgreSQL session store for production
+Database connected successfully
+Database URL domain: ep-spring-cherry-a6a3mhmh.us-west-2.aws.neon.tech
+PostgreSQL session store initialized successfully
+PostgreSQL session middleware configured
+5:51:41 AM [express] Setting up in production mode for stability
+HTTP server is now listening, initializing WebSocket server
+WebSocket server environment details:
+- NODE_ENV: production
+- Render detection: true
+- Server port: 10000
+WebSocket server initialized on path: /ws after HTTP server started
+5:51:41 AM [express] Server started in production mode
+5:51:41 AM [express] Listening on port 10000
+5:51:41 AM [express] WebSocket server enabled and listening
+==> Your service is live 🎉
+Session check request:  {
+  sessionId: 'yumBOeSeLwSYkbh-6ZeFF5Tf93veHQLQ',
+  hasSession: true,
+  userId: 1,
+  remoteIp: '10.201.49.4',
+  environment: 'Production',
+  isRender: true,
+  hasCookieHeader: true,
+  cookieCount: 1,
+  isSecure: true
+}
+5:52:09 AM [express] GET /api/auth/session 304 in 289ms :: {"isLoggedIn":true,"username":"beyondgroo…
+Fetching all active queue items from database
+Retrieved 1 active queue items
+Broadcasting queue update to 0 clients
+Broadcast statistics: 0 connected, 0 authenticated, 0 disconnected
+Broadcast complete: 0 connected, 0 disconnected
+5:52:27 AM [express] POST /api/queue 201 in 2193ms :: {"id":33,"name":"Tushar","phone_number":"78237…
+WebSocket verifyClient called:
+- Origin: https://uireplicator.onrender.com
+- Secure: no
+- URL path: /ws
+- Headers present: host, user-agent, accept-encoding, accept-language, cache-control, cdn-loop, cf-connecting-ip, cf-ipcountry, cf-ray, cf-visitor, connection, cookie, origin, pragma, render-proxy-ttl, rndr-id, sec-websocket-extensions, sec-websocket-key, sec-websocket-version, true-client-ip, upgrade, x-forwarded-for, x-forwarded-proto, x-render-as-num, x-render-threat-score
+Render production environment detected - accepting all WebSocket connections
+WebSocket client connected from 127.0.0.1, URL: /ws, Host: uireplicator.onrender.com, Origin: https://uireplicator.onrender.com
+Connection environment: Render Production
+Cookies present: Yes
+Cookie names: beyond.sid
+Total connected clients: 1
+Auth check: { hasSession: true, userId: 1, path: '/api/queue' }
+GET /api/queue: Fetching active queue items
+Fetching all active queue items from database
+Retrieved 2 active queue items
+GET /api/queue: Returning 2 queue items
+Sample item: ID=32, Name=Michael, Status=Waiting
+5:52:32 AM [express] GET /api/queue 200 in 431ms :: [{"id":32,"name":"Michael","phone_number":"79837…
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+5:52:33 AM [express] GET /api/queue/stats 200 in 1579ms :: {"waiting":2,"almostDone":0,"total":2}
+Auth check: { hasSession: true, userId: 1, path: '/api/customers' }
+GET /api/customers: Fetching all customer records
+Fetching all customer records from database (including served)
+Retrieved 32 total customer records
+GET /api/customers: Returning 32 customer records
+5:52:34 AM [express] GET /api/customers 200 in 433ms :: [{"id":33,"name":"Tushar","phone_number":"78…
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/32/verify-payment' }
+Broadcasting queue update to 1 clients
+Broadcast statistics: 1 connected, 0 authenticated, 0 disconnected
+Broadcast complete: 1 connected, 0 disconnected
+5:52:40 AM [express] PUT /api/queue/32/verify-payment 200 in 1023ms :: {"id":32,"name":"Michael","ph…
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+Auth check: { hasSession: true, userId: 1, path: '/api/queue' }
+GET /api/queue: Fetching active queue items
+Fetching all active queue items from database
+Retrieved 2 active queue items
+GET /api/queue: Returning 2 queue items
+Sample item: ID=32, Name=Michael, Status=Waiting
+5:52:41 AM [express] GET /api/queue 200 in 864ms :: [{"id":32,"name":"Michael","phone_number":"79837…
+Received pong from client, connection marked as alive
+Auth check: { hasSession: true, userId: 1, path: '/api/queue' }
+GET /api/queue: Fetching active queue items
+Fetching all active queue items from database
+5:52:41 AM [express] GET /api/queue/stats 304 in 1169ms :: {"waiting":2,"almostDone":0,"total":2}
+Retrieved 2 active queue items
+GET /api/queue: Returning 2 queue items
+Sample item: ID=32, Name=Michael, Status=Waiting
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+5:52:42 AM [express] GET /api/queue 304 in 431ms :: [{"id":32,"name":"Michael","phone_number":"79837…
+Auth check: { hasSession: true, userId: 1, path: '/api/queue' }
+GET /api/queue: Fetching active queue items
+Fetching all active queue items from database
+Retrieved 2 active queue items
+GET /api/queue: Returning 2 queue items
+Sample item: ID=32, Name=Michael, Status=Waiting
+5:52:42 AM [express] GET /api/queue 304 in 429ms :: [{"id":32,"name":"Michael","phone_number":"79837…
+5:52:42 AM [express] GET /api/queue/stats 304 in 723ms :: {"waiting":2,"almostDone":0,"total":2}
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+5:52:43 AM [express] GET /api/queue/stats 304 in 725ms :: {"waiting":2,"almostDone":0,"total":2}
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/32' }
+Broadcasting queue update to 1 clients
+Broadcast statistics: 1 connected, 0 authenticated, 0 disconnected
+Broadcast complete: 1 connected, 0 disconnected
+5:52:44 AM [express] PUT /api/queue/32 200 in 580ms :: {"id":32,"name":"Michael","phone_number":"798…
+Auth check: { hasSession: true, userId: 1, path: '/api/queue' }
+GET /api/queue: Fetching active queue items
+Fetching all active queue items from database
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+Retrieved 1 active queue items
+GET /api/queue: Returning 1 queue items
+Sample item: ID=33, Name=Tushar, Status=Waiting
+5:52:44 AM [express] GET /api/queue 200 in 434ms :: [{"id":33,"name":"Tushar","phone_number":"782371…
+Auth check: { hasSession: true, userId: 1, path: '/api/queue' }
+GET /api/queue: Fetching active queue items
+Fetching all active queue items from database
+5:52:45 AM [express] GET /api/queue/stats 200 in 714ms :: {"waiting":1,"almostDone":0,"total":1}
+Retrieved 1 active queue items
+GET /api/queue: Returning 1 queue items
+Sample item: ID=33, Name=Tushar, Status=Waiting
+5:52:45 AM [express] GET /api/queue 304 in 430ms :: [{"id":33,"name":"Tushar","phone_number":"782371…
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+Auth check: { hasSession: true, userId: 1, path: '/api/queue' }
+GET /api/queue: Fetching active queue items
+Fetching all active queue items from database
+Retrieved 1 active queue items
+GET /api/queue: Returning 1 queue items
+Sample item: ID=33, Name=Tushar, Status=Waiting
+5:52:45 AM [express] GET /api/queue 304 in 430ms :: [{"id":33,"name":"Tushar","phone_number":"782371…
+5:52:46 AM [express] GET /api/queue/stats 304 in 715ms :: {"waiting":1,"almostDone":0,"total":1}
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+5:52:46 AM [express] GET /api/queue/stats 304 in 714ms :: {"waiting":1,"almostDone":0,"total":1}
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/33/verify-payment' }
+Broadcasting queue update to 1 clients
+Broadcast statistics: 1 connected, 0 authenticated, 0 disconnected
+Broadcast complete: 1 connected, 0 disconnected
+5:52:47 AM [express] PUT /api/queue/33/verify-payment 200 in 570ms :: {"id":33,"name":"Tushar","phon…
+Auth check: { hasSession: true, userId: 1, path: '/api/queue' }
+GET /api/queue: Fetching active queue items
+Fetching all active queue items from database
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+Retrieved 1 active queue items
+GET /api/queue: Returning 1 queue items
+Sample item: ID=33, Name=Tushar, Status=Waiting
+5:52:48 AM [express] GET /api/queue 200 in 431ms :: [{"id":33,"name":"Tushar","phone_number":"782371…
+Auth check: { hasSession: true, userId: 1, path: '/api/queue' }
+GET /api/queue: Fetching active queue items
+Fetching all active queue items from database
+5:52:48 AM [express] GET /api/queue/stats 304 in 721ms :: {"waiting":1,"almostDone":0,"total":1}
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/33' }
+Retrieved 1 active queue items
+GET /api/queue: Returning 1 queue items
+Sample item: ID=33, Name=Tushar, Status=Waiting
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+5:52:48 AM [express] GET /api/queue 304 in 433ms :: [{"id":33,"name":"Tushar","phone_number":"782371…
+Broadcasting queue update to 1 clients
+Broadcast statistics: 1 connected, 0 authenticated, 0 disconnected
+Broadcast complete: 1 connected, 0 disconnected
+Auth check: { hasSession: true, userId: 1, path: '/api/queue' }
+GET /api/queue: Fetching active queue items
+Fetching all active queue items from database
+5:52:48 AM [express] PUT /api/queue/33 200 in 571ms :: {"id":33,"name":"Tushar","phone_number":"7823…
+Retrieved 0 active queue items
+GET /api/queue: Returning 0 queue items
+5:52:48 AM [express] GET /api/queue 200 in 428ms :: []
+5:52:49 AM [express] GET /api/queue/stats 200 in 721ms :: {"waiting":0,"almostDone":0,"total":0}
+Auth check: { hasSession: true, userId: 1, path: '/api/queue' }
+GET /api/queue: Fetching active queue items
+Fetching all active queue items from database
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+Retrieved 0 active queue items
+GET /api/queue: Returning 0 queue items
+5:52:49 AM [express] GET /api/queue 304 in 431ms :: []
+Auth check: { hasSession: true, userId: 1, path: '/api/queue' }
+GET /api/queue: Fetching active queue items
+Fetching all active queue items from database
+Retrieved 0 active queue items
+GET /api/queue: Returning 0 queue items
+5:52:49 AM [express] GET /api/queue/stats 304 in 716ms :: {"waiting":0,"almostDone":0,"total":0}
+5:52:49 AM [express] GET /api/queue 304 in 431ms :: []
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+Auth check: { hasSession: true, userId: 1, path: '/api/queue' }
+GET /api/queue: Fetching active queue items
+Fetching all active queue items from database
+Retrieved 0 active queue items
+GET /api/queue: Returning 0 queue items
+5:52:50 AM [express] GET /api/queue 304 in 429ms :: []
+5:52:50 AM [express] GET /api/queue/stats 304 in 721ms :: {"waiting":0,"almostDone":0,"total":0}
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+5:52:51 AM [express] GET /api/queue/stats 304 in 726ms :: {"waiting":0,"almostDone":0,"total":0}
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+5:52:52 AM [express] GET /api/queue/stats 304 in 728ms :: {"waiting":0,"almostDone":0,"total":0}
