@@ -257,6 +257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         secret: process.env.SESSION_SECRET || 'beyond-grooming-secret',
         resave: false,
         saveUninitialized: false,
+        proxy: true, // Trust the first proxy (critical for Render.com)
         cookie: {
           secure: isProduction, // Use secure cookies in production
           sameSite: isProduction ? 'none' : 'lax', // Proper cross-site cookie handling
@@ -290,6 +291,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       secret: process.env.SESSION_SECRET || 'beyond-grooming-secret',
       resave: false,
       saveUninitialized: false,
+      proxy: true, // Trust the first proxy (critical for Render.com)
       cookie: {
         secure: isProduction, // Secure in production, non-secure in dev
         sameSite: isProduction ? 'none' : 'lax',
@@ -356,9 +358,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (err) {
         return res.status(500).json({ message: "Failed to logout" });
       }
+      
+      // Cookie options need to match the ones used when setting the cookie
+      const isProduction = process.env.NODE_ENV === 'production' || !!process.env.RENDER;
+      const isRender = !!process.env.RENDER || !!process.env.RENDER_EXTERNAL_URL;
+      
+      const cookieOptions = {
+        secure: isProduction,
+        sameSite: isProduction ? 'none' as const : 'lax' as const,
+        path: '/',
+        httpOnly: true,
+        ...(isRender ? {
+          domain: process.env.RENDER_EXTERNAL_HOSTNAME || undefined
+        } : {})
+      };
+      
       // Clear both possible cookie names to ensure logout works
-      res.clearCookie('beyond.sid');
-      res.clearCookie('connect.sid'); // Keep this for backward compatibility
+      res.clearCookie('beyond.sid', cookieOptions);
+      res.clearCookie('connect.sid', cookieOptions); // Keep this for backward compatibility
+      
       return res.status(200).json({ message: "Logged out successfully" });
     });
   });

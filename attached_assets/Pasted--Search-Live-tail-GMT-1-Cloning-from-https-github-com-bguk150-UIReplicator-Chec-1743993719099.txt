@@ -1,0 +1,155 @@
+
+Search
+
+Live tail
+GMT+1
+
+
+==> Cloning from https://github.com/bguk150/UIReplicator
+==> Checking out commit 3da6e624746b5189c3708d9f5786bfb65c39dd20 in branch main
+==> Downloading cache...
+==> Transferred 211MB in 8s. Extraction took 4s.
+==> Using Node.js version 22.14.0 (default)
+==> Docs on specifying a Node.js version: https://render.com/docs/node-version
+==> Using Bun version 1.1.0 (default)
+==> Docs on specifying a bun version: https://render.com/docs/bun-version
+==> Running build command 'npm install --include=dev && npm run build'...
+up to date, audited 524 packages in 1s
+65 packages are looking for funding
+  run `npm fund` for details
+7 moderate severity vulnerabilities
+To address issues that do not require attention, run:
+  npm audit fix
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+Run `npm audit` for details.
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+vite v5.4.17 building for production...
+transforming...
+✓ 2140 modules transformed.
+rendering chunks...
+computing gzip size...
+../dist/public/index.html                   3.80 kB │ gzip:   1.43 kB
+../dist/public/assets/index-DiJTj7_6.css   59.24 kB │ gzip:  10.61 kB
+../dist/public/assets/index-BuJQ643x.js   488.86 kB │ gzip: 150.10 kB
+✓ built in 4.48s
+  dist/index.js  33.2kb
+⚡ Done in 6ms
+==> Uploading build...
+==> Uploaded in 5.3s. Compression took 3.3s
+==> Build successful 🎉
+==> Deploying...
+==> Running 'npm run start'
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+Database configuration for: PRODUCTION (Render)
+Attempting database connection...
+Environment detected: PRODUCTION (Render)
+Node ENV: production
+Initializing PostgreSQL session store for production
+Database connected successfully
+Database URL domain: ep-spring-cherry-a6a3mhmh.us-west-2.aws.neon.tech
+PostgreSQL session store initialized successfully
+PostgreSQL session middleware configured
+2:35:31 AM [express] Setting up in production mode for stability
+HTTP server is now listening, initializing WebSocket server
+WebSocket server environment details:
+- NODE_ENV: production
+- Render detection: true
+- Server port: 10000
+WebSocket server initialized on path: /ws after HTTP server started
+2:35:31 AM [express] Server started in production mode
+2:35:31 AM [express] Listening on port 10000
+2:35:31 AM [express] WebSocket server enabled and listening
+==> Your service is live 🎉
+2:35:56 AM [express] GET /api/auth/session 200 in 2ms :: {"isLoggedIn":false}
+Fetching all active queue items from database
+Retrieved 0 active queue items
+Broadcasting queue update to 0 clients
+Broadcast statistics: 0 connected, 0 authenticated, 0 disconnected
+Broadcast complete: 0 connected, 0 disconnected
+2:36:12 AM [express] POST /api/queue 201 in 1041ms :: {"id":17,"name":"Tushar","phone_number":"78237…
+2:36:32 AM [express] POST /api/login 200 in 1610ms :: {"message":"Login successful"}
+2:36:32 AM [express] GET /api/auth/session 304 in 1ms :: {"isLoggedIn":false}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue' }
+Auth failed: /api/queue
+2:36:32 AM [express] GET /api/queue 401 in 3ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue/stats' }
+Auth failed: /api/queue/stats
+2:36:33 AM [express] GET /api/queue/stats 401 in 1ms :: {"message":"Unauthorized"}
+WebSocket verifyClient called:
+- Origin: https://uireplicator.onrender.com
+- Secure: no
+- URL path: /ws
+- Headers present: host, user-agent, accept-encoding, accept-language, cache-control, cdn-loop, cf-connecting-ip, cf-ipcountry, cf-ray, cf-visitor, connection, origin, pragma, render-proxy-ttl, rndr-id, sec-websocket-extensions, sec-websocket-key, sec-websocket-version, true-client-ip, upgrade, x-forwarded-for, x-forwarded-proto, x-render-as-num, x-render-threat-score
+Render production environment detected - accepting all WebSocket connections
+WebSocket client connected from 127.0.0.1, URL: /ws, Host: uireplicator.onrender.com, Origin: https://uireplicator.onrender.com
+Connection environment: Render Production
+Cookies present: No
+Total connected clients: 1
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue' }
+Auth failed: /api/queue
+2:36:34 AM [express] GET /api/queue 401 in 1ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue/stats' }
+Auth failed: /api/queue/stats
+2:36:34 AM [express] GET /api/queue/stats 401 in 1ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue' }
+Auth failed: /api/queue
+2:36:35 AM [express] GET /api/queue 401 in 1ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue/stats' }
+Auth failed: /api/queue/stats
+2:36:36 AM [express] GET /api/queue/stats 401 in 1ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue' }
+Auth failed: /api/queue
+2:36:36 AM [express] GET /api/queue 401 in 2ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue' }
+Auth failed: /api/queue
+2:36:38 AM [express] GET /api/queue 401 in 2ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue/stats' }
+Auth failed: /api/queue/stats
+2:36:40 AM [express] GET /api/queue/stats 401 in 1ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue' }
+Auth failed: /api/queue
+2:36:43 AM [express] GET /api/queue 401 in 1ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue/stats' }
+Auth failed: /api/queue/stats
+2:36:43 AM [express] GET /api/queue/stats 401 in 0ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue/stats' }
+Auth failed: /api/queue/stats
+2:36:44 AM [express] GET /api/queue/stats 401 in 1ms :: {"message":"Unauthorized"}
+WebSocket message received: PING
+Received pong from client, connection marked as alive
+WebSocket message received: PING
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue' }
+Auth failed: /api/queue
+2:37:04 AM [express] GET /api/queue 401 in 1ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue/stats' }
+Auth failed: /api/queue/stats
+2:37:04 AM [express] GET /api/queue/stats 401 in 1ms :: {"message":"Unauthorized"}
+Auth check: { hasSession: true, userId: undefined, path: '/api/queue/stats' }
+Auth failed: /api/queue/stats
+2:37:08 AM [express] GET /api/queue/stats 401 in 2ms :: {"message":"Unauthorized"}
+WebSocket message received: PING
+Received pong from client, connection marked as alive
+WebSocket message received: PING
+WebSocket message received: PING
+Received pong from client, connection marked as alive
+WebSocket message received: PING
+WebSocket message received: PING
+Received pong from client, connection marked as alive
+WebSocket message received: PING
+Received pong from client, connection marked as alive
+WebSocket message received: PING
+WebSocket message received: PING
+Received pong from client, connection marked as alive
+Received pong from client, connection marked as alive
+WebSocket message received: PING
+WebSocket message received: PING
+==> Detected service running on port 10000
+==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
+Received pong from client, connection marked as alive
+Received pong from client, connection marked as alive
+WebSocket message received: PING
+WebSocket message received: PING
+Received pong from client, connection marked as alive
