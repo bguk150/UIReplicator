@@ -15,6 +15,11 @@ export default function CustomerDatabase() {
   // Query to fetch all customer records
   const { data: customers, isLoading, refetch } = useQuery<Queue[]>({
     queryKey: ['/api/customers'],
+    queryFn: async () => {
+      const result = await queueService.getAllCustomerRecords();
+      console.log("Customer database records loaded:", result.length);
+      return result;
+    },
     refetchOnWindowFocus: false,
   });
 

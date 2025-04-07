@@ -10,7 +10,6 @@ import CustomerCard from "@/components/CustomerCard";
 import CustomerDatabase from "@/components/CustomerDatabase";
 import { useToast } from "@/hooks/use-toast";
 import { useQueueUpdates } from "@/lib/websocket";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function BarberDashboard() {
   const { toast } = useToast();
