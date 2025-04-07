@@ -196,7 +196,7 @@ export default function CheckInPage() {
                       />
                     </div>
                   </FormControl>
-                  <p className="text-xs text-gray-400 mt-1">Enter your number without the leading zero (e.g., 7823710017)</p>
+                  <p className="text-xs text-gray-400 mt-1">Enter your number without the leading zero (e.g., 7XXXXXXXXX)</p>
                   <FormMessage />
                 </FormItem>
               )}
