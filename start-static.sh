@@ -1,13 +1,16 @@
 #!/bin/bash
 
-# Build both client and server
-echo "Building client and server..."
+# Set environment to production
+export NODE_ENV=production
+
+# Build the application
+echo "Building application..."
 npm run build
 
-# Run the static server with the built files
+# Build static server
 echo "Building static server..."
 esbuild server/static-server.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/static-server.js
 
 # Start the static server
 echo "Starting static server..."
-NODE_ENV=production node dist/static-server.js
+node dist/static-server.js

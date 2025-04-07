@@ -126,11 +126,9 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
+  // Force serving the static build we just created
+  // This bypasses Vite dev server which is giving us connection issues
+  serveStatic(app);
 
   const port = process.env.PORT || 5000;
   server.listen({
