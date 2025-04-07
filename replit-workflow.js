@@ -2,45 +2,56 @@
  * This script is called by the Replit workflow
  * It determines whether to build and run the app or use the static server
  */
-import { execSync } from 'child_process';
+
+import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-// Get current file directory (equivalent to __dirname in CommonJS)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-console.log('💈 Beyond Grooming Workflow 💈');
-
-// Set production environment
-process.env.NODE_ENV = 'production';
-
-const distDir = path.join(__dirname, 'dist');
-const publicDir = path.join(distDir, 'public');
-const shouldBuild = !fs.existsSync(publicDir) || process.argv.includes('--rebuild');
-
-// Build the app if necessary
-if (shouldBuild) {
-  console.log('📦 Building application...');
+// Check if static server should be used
+function useStaticServer() {
   try {
-    execSync('npm run build', { stdio: 'inherit' });
-    console.log('✅ Build complete!');
+    const env = process.env.NODE_ENV || 'development';
+    return env === 'production';
   } catch (error) {
-    console.error('❌ Build failed:', error);
-    process.exit(1);
+    return false;
   }
 }
 
-// Start the static server
-console.log('🚀 Starting server...');
-try {
-  // Use dynamic import for ES modules
-  const staticServer = await import('./dist/static-server.js');
-} catch (error) {
-  console.error('❌ Server failed to start:', error);
-  process.exit(1);
+// Main function to start the app
+async function startApp() {
+  console.log('♦️ Beyond Grooming Workflow Manager ♦️');
+  
+  // In production mode, use the static server
+  if (useStaticServer()) {
+    console.log('Starting in production mode...');
+    
+    // Start the static server (run-static.js)
+    const staticServer = spawn('node', ['run-static.js'], { 
+      stdio: 'inherit',
+      env: { ...process.env, NODE_ENV: 'production' }
+    });
+    
+    staticServer.on('exit', (code) => {
+      console.error(`Static server exited with code ${code}`);
+      process.exit(code || 1);
+    });
+  } else {
+    console.log('Starting in development mode...');
+    
+    // Start development server (server/index.ts)
+    const devServer = spawn('npm', ['run', 'dev'], { 
+      stdio: 'inherit' 
+    });
+    
+    devServer.on('exit', (code) => {
+      console.error(`Development server exited with code ${code}`);
+      process.exit(code || 1);
+    });
+  }
 }
 
-// Export for dynamic imports
-export {};
+// Start the application
+startApp().catch(err => {
+  console.error('Failed to start application:', err);
+  process.exit(1);
+});

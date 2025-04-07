@@ -1,22 +1,30 @@
 #!/bin/bash
 
-# Beyond Grooming Custom Workflow Script for Replit
-echo "💈 Beyond Grooming App - Replit Workflow Starter 💈"
+# Workflow starter script for Replit
+# This script prepares the environment and starts the app in the Replit workflow
 
-# Set production mode
-export NODE_ENV=production
+echo "🚀 Starting Beyond Grooming application in Replit workflow"
 
-# Determine if we need to build first
-if [ ! -d "dist/public" ] || [ "$1" == "--rebuild" ]; then
-  echo "📦 Building application..."
-  npm run build
-  if [ $? -ne 0 ]; then
-    echo "❌ Build failed!"
-    exit 1
-  fi
-  echo "✅ Build completed successfully!"
+# First, make sure we have the server/public directory
+if [ ! -d "server/public" ]; then
+  echo "📁 Creating server/public directory..."
+  mkdir -p server/public
+  
+  # Create a placeholder index.html
+  echo '<!DOCTYPE html><html><head><title>Development Server</title></head><body><div id="root"></div></body></html>' > server/public/index.html
+  
+  echo "✅ Created server/public directory with placeholder"
 fi
 
-# Start static server directly
-echo "🚀 Starting server in production mode..."
-node dist/static-server.js
+# Check database connection
+echo "🔍 Checking database connection..."
+if [ -z "$DATABASE_URL" ]; then
+  echo "⚠️ Warning: DATABASE_URL environment variable is not set"
+  echo "The application might not be able to connect to the database"
+else
+  echo "✅ DATABASE_URL is set"
+fi
+
+# Start the application in development mode
+echo "🚀 Starting development server..."
+exec node --experimental-specifier-resolution=node --es-module-specifier-resolution=node ./server/index.ts

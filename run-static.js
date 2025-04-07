@@ -2,72 +2,98 @@
  * Enhanced static file server runner for Replit and Render
  * This script handles both build and runtime for production environments
  */
-
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 // Get current file directory (equivalent to __dirname in CommonJS)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Configure environment
-process.env.NODE_ENV = 'production';
+// Determine the environment
+const isRender = !!process.env.RENDER;
+const isReplit = !!(process.env.REPL_ID && process.env.REPL_OWNER);
+const isProduction = process.env.NODE_ENV === 'production';
 
-// Check if we have a database URL
-if (!process.env.DATABASE_URL) {
-  console.warn('⚠️ WARNING: DATABASE_URL environment variable is not set.');
-  console.warn('Database functionality will be limited or unavailable.');
+console.log(`Running in environment:
+- Render: ${isRender ? 'YES' : 'NO'}
+- Replit: ${isReplit ? 'YES' : 'NO'} 
+- Production mode: ${isProduction ? 'YES' : 'NO'}`);
+
+// Force production mode if on Render or Replit
+if ((isRender || isReplit) && !isProduction) {
+  console.log('📝 Forcing production mode for deployment environment');
+  process.env.NODE_ENV = 'production';
 }
 
-// Check if ClickSend credentials are available
-if (!process.env.CLICKSEND_USERNAME || !process.env.CLICKSEND_API_KEY) {
-  console.warn('⚠️ WARNING: ClickSend credentials are not set.');
-  console.warn('SMS notification functionality will be unavailable.');
+// Check if build is needed
+async function checkBuildNeeded() {
+  const distDir = path.join(__dirname, 'dist');
+  const publicDir = path.join(distDir, 'public');
+  const indexHtmlPath = path.join(publicDir, 'index.html');
+  const staticServerJsPath = path.join(distDir, 'static-server.js');
+  
+  // If dist directory or required files don't exist, build is needed
+  return !fs.existsSync(distDir) || 
+         !fs.existsSync(publicDir) || 
+         !fs.existsSync(indexHtmlPath) ||
+         !fs.existsSync(staticServerJsPath);
 }
 
-// Paths
-const distDir = path.join(__dirname, 'dist');
-const publicDir = path.join(distDir, 'public');
-const indexHtml = path.join(publicDir, 'index.html');
-const staticServerJs = path.join(distDir, 'static-server.js');
-
-// Check if we need to build
-const needsBuild = !fs.existsSync(indexHtml) || !fs.existsSync(staticServerJs);
-
-// Build the application if needed
-if (needsBuild) {
+// Build the application
+async function buildApplication() {
   console.log('📦 Building application...');
   try {
     execSync('npm run build', { stdio: 'inherit' });
-    console.log('✅ Build completed successfully!');
+    console.log('✅ Build completed successfully');
+    return true;
   } catch (error) {
     console.error('❌ Build failed:', error);
-    process.exit(1);
+    return false;
   }
 }
 
 // Start the static server
-console.log('🚀 Starting server in production mode...');
-
-try {
-  // Dynamically import the static server
-  const startTime = Date.now();
-  const staticServer = await import('./dist/static-server.js');
-  const loadTime = Date.now() - startTime;
-  console.log(`⭐ Server module loaded in ${loadTime}ms`);
-} catch (error) {
-  console.error('❌ Server failed to start:', error);
-  process.exit(1);
+async function startStaticServer() {
+  console.log('🚀 Starting static server...');
+  try {
+    // Use dynamic import for ES Modules compatibility
+    const staticServer = await import('./dist/static-server.js');
+    console.log('✅ Server started successfully');
+  } catch (error) {
+    console.error('❌ Server failed to start:', error);
+    process.exit(1);
+  }
 }
 
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught exception:', err);
-});
+// Main execution
+async function main() {
+  // Ensure we're in production mode on Render and Replit
+  if (isRender || isReplit) {
+    process.env.NODE_ENV = 'production';
+  }
+  
+  // Check if build is needed
+  const buildNeeded = await checkBuildNeeded();
+  
+  // Build if necessary (mostly for Replit as Render will already have run the build step)
+  if (buildNeeded) {
+    const buildSuccess = await buildApplication();
+    if (!buildSuccess) {
+      console.error('❌ Cannot continue without a successful build');
+      process.exit(1);
+    }
+  }
+  
+  // Start the server
+  await startStaticServer();
+}
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled rejection at:', promise, 'reason:', reason);
+// Run the main function
+main().catch(error => {
+  console.error('❌ Fatal error:', error);
+  process.exit(1);
 });
 
 // For module compatibility

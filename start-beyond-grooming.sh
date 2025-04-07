@@ -1,28 +1,36 @@
 #!/bin/bash
 
-# Beyond Grooming Dedicated Replit Start Script
-echo "💈 Beyond Grooming Replit Start Script 💈"
+# Start script for Beyond Grooming
+# This will be called by npm run dev through the Replit workflow
 
-# Clear any existing node processes to prevent port conflicts
-echo "🧹 Cleaning up any existing processes..."
-pkill -f "node dist/static-server.js" || true
+echo "🚀 Starting Beyond Grooming application"
 
-# Set production environment
-export NODE_ENV=production
-
-# Make sure we have a build
-if [ ! -d "dist/public" ] || [ ! -f "dist/static-server.js" ]; then
-  echo "📦 No build found. Building application..."
-  npm run build
-  if [ $? -ne 0 ]; then
-    echo "❌ Build failed!"
-    exit 1
-  fi
+# First, ensure server/public directory exists
+if [ ! -d "server/public" ]; then
+  echo "📁 Creating server/public directory..."
+  mkdir -p server/public
+  
+  # Create a placeholder index.html
+  echo '<!DOCTYPE html><html><head><title>Development Server</title></head><body><div id="root"></div></body></html>' > server/public/index.html
+  
+  echo "✅ Created server/public directory with placeholder"
 fi
 
-# Start the server directly, not with node -r flag which has issues in Replit
-echo "🚀 Starting application server..."
-node dist/static-server.js
+# Check database connection
+echo "🔍 Checking database connection..."
+if [ -z "$DATABASE_URL" ]; then
+  echo "⚠️ Warning: DATABASE_URL environment variable is not set"
+  echo "The application might not be able to connect to the database"
+else
+  echo "✅ DATABASE_URL is set"
+fi
 
-# We should never get here unless the server exits
-echo "⚠️ Server exited with code $?"
+# Start the application based on NODE_ENV
+if [ "$NODE_ENV" = "production" ]; then
+  echo "🏭 Running in production mode"
+  node run-static.js
+else
+  echo "🔧 Running in development mode"
+  # Use the original npm run dev command's behavior
+  vite
+fi

@@ -1,24 +1,50 @@
 #!/bin/bash
 
-# Start script for Beyond Grooming
-echo "💈 Beyond Grooming - Start Script 💈"
+# Beyond Grooming Startup Script
+# Handles multiple environments and startup modes
 
-# Set production environment
-export NODE_ENV=production
+# Display header
+echo "==============================================="
+echo "💈 Beyond Grooming Barbershop Queue System 💈"
+echo "==============================================="
 
-# Check if dist directory exists
-if [ ! -d "dist" ] || [ ! -d "dist/public" ]; then
-  echo "❌ Build artifacts not found. Running build script..."
-  ./build.sh
-  if [ $? -ne 0 ]; then
-    echo "❌ Build failed. Cannot start the application."
-    exit 1
-  fi
+# Detect environment
+if [ "$RENDER" = "true" ]; then
+  ENV="render"
+elif [ -n "$REPL_ID" ]; then
+  ENV="replit"
+else
+  ENV="local"
 fi
 
-# Start the application
-echo "🚀 Starting application in production mode..."
-node dist/static-server.js
+# Set mode to production for reliability
+export NODE_ENV=production
+MODE="production"
 
-# Exit with the server's exit code
-exit $?
+echo "Environment: $ENV"
+echo "Mode: $MODE"
+
+# Use the workflow manager script in Replit
+if [ "$ENV" = "replit" ]; then
+  echo "Using Replit workflow manager..."
+  node replit-workflow.js
+else
+  # For other environments, directly use the static server
+  echo "🚀 Starting in production mode..."
+
+  # Check if build is needed
+  if [ ! -d "dist" ] || [ ! -d "dist/public" ]; then
+    echo "📦 No build found, creating production build..."
+    npm run build
+    
+    if [ $? -ne 0 ]; then
+      echo "❌ Build failed! Please check the logs"
+      exit 1
+    fi
+    
+    echo "✅ Build completed successfully"
+  fi
+
+  # Use the static server to serve the application
+  node run-static.js
+fi

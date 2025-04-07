@@ -1,34 +1,49 @@
 #!/bin/bash
 
-# Build helper script for Beyond Grooming
-# This script ensures the build output is in the correct location for Replit
+# Beyond Grooming Build Helper
+# This script helps with building and running the application in various environments
 
-echo "💈 Beyond Grooming - Build Helper 💈"
+# Detect environment
+IS_RENDER="${RENDER:-false}"
+IS_REPLIT="${REPL_ID:+true}"
+IS_REPLIT="${IS_REPLIT:-false}"
+NODE_ENV="${NODE_ENV:-development}"
 
-# Run the build
-echo "📦 Building application..."
-npm run build
+echo "🔍 Environment detection:"
+echo "- Render: $IS_RENDER"
+echo "- Replit: $IS_REPLIT"
+echo "- NODE_ENV: $NODE_ENV"
 
-if [ $? -ne 0 ]; then
-  echo "❌ Build failed!"
-  exit 1
+# Set NODE_ENV to production in Render or Replit environments
+if [ "$IS_RENDER" = "true" ] || [ "$IS_REPLIT" = "true" ]; then
+  echo "🔄 Setting NODE_ENV to production for deployment environment"
+  export NODE_ENV="production"
 fi
 
-echo "✅ Build completed successfully!"
-
-# Check if dist directory exists and has the expected content
-if [ ! -d "dist/public" ]; then
-  echo "❌ dist/public directory not found after build! Something went wrong."
-  exit 1
+# Check if build is needed
+if [ ! -d "dist" ] || [ ! -d "dist/public" ] || [ ! -f "dist/public/index.html" ] || [ ! -f "dist/static-server.js" ]; then
+  echo "📦 Build needed, running npm build..."
+  npm run build
+  
+  if [ $? -ne 0 ]; then
+    echo "❌ Build failed!"
+    exit 1
+  fi
+  
+  echo "✅ Build completed successfully"
+else
+  echo "✅ Build already exists, skipping build step"
 fi
 
-if [ ! -f "dist/static-server.js" ]; then
-  echo "❌ dist/static-server.js not found after build! Something went wrong."
-  exit 1
+# Start the application
+echo "🚀 Starting the application in $NODE_ENV mode..."
+
+if [ "$NODE_ENV" = "production" ]; then
+  # In production, use the static server
+  echo "🚀 Using static server for production mode"
+  node dist/static-server.js
+else
+  # In development, use the development server
+  echo "🚀 Using development server"
+  tsx server/index.ts
 fi
-
-echo "📂 Build output overview:"
-ls -la dist
-ls -la dist/public
-
-echo "✨ Build process complete and verified!"

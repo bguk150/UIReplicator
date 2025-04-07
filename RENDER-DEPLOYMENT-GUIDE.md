@@ -1,56 +1,92 @@
 # Render Deployment Guide for Beyond Grooming
 
-This guide explains how to successfully deploy the Beyond Grooming application to Render.com.
+This guide outlines the steps required to deploy the Beyond Grooming application on Render.com.
 
-## Issue With Default Deployment Process
+## Prerequisites
 
-The application requires dev dependencies for the build process, but Render's default behavior is to run `npm install --production`, which skips these dependencies.
+Before deploying to Render, make sure you have:
 
-## Solution: Manual Build Command Configuration
+1. A Render.com account
+2. A Neon PostgreSQL database (or any PostgreSQL database)
+3. ClickSend API credentials (if using SMS notifications)
+4. Your GitHub repository with the application code
 
-When creating your Render service, follow these steps:
+## Environment Variables
 
-1. Create a new **Web Service** on Render
-2. Connect your GitHub repository 
-3. Use the following settings:
-   - **Environment**: Node
-   - **Build Command**: `npm install --include=dev && npm run build`
-   - **Start Command**: `node dist/index.js`
+Set the following environment variables in your Render dashboard:
 
-## Required Environment Variables
+| Variable | Description | Example |
+|---------|-------------|---------|
+| `NODE_ENV` | Environment setting | `production` |
+| `DATABASE_URL` | PostgreSQL connection string | `postgres://user:password@host:port/database` |
+| `CLICKSEND_USERNAME` | ClickSend username | `your_username` |
+| `CLICKSEND_API_KEY` | ClickSend API key | `your_api_key` |
+| `SESSION_SECRET` | Secret for session cookies | `random_string_here` |
 
-Configure these environment variables in your Render service:
+## Deployment Steps
 
-- `NODE_ENV`: Set to `production`
-- `SESSION_SECRET`: Create a secure random string (for session encryption)
-- `RENDER_EXTERNAL_HOSTNAME`: Your Render app URL (e.g., `beyondgrooming.onrender.com`)
-- `DATABASE_URL`: Your PostgreSQL connection string (uses Neon PostgreSQL serverless)
-- `CLICKSEND_API_KEY`: Your ClickSend API key (for SMS notifications)
-- `CLICKSEND_USERNAME`: Your ClickSend username (email address)
+1. **Login to Render Dashboard**
+   - Go to [dashboard.render.com](https://dashboard.render.com)
+   - Sign in to your account
 
-## Troubleshooting Common Issues
+2. **Create a New Web Service**
+   - Click "New" and select "Web Service"
+   - Connect your GitHub repository
+   - Select the repository containing your Beyond Grooming application
 
-### "Command not found" During Build
+3. **Configure Deployment Settings**
+   - Name: `beyond-grooming` (or your preferred name)
+   - Region: Choose the region closest to your users
+   - Branch: `main` (or your default branch)
+   - Runtime: `Node`
+   - Build Command: `npm install && npm run build`
+   - Start Command: `node run-static.js`
+   - Plan: Select an appropriate plan (Starter or higher recommended)
 
-If you see errors like `vite: command not found` during build:
+4. **Add Environment Variables**
+   - Add all the environment variables listed above
+   - Make sure `NODE_ENV` is set to `production`
 
-1. Go to your Render dashboard
-2. Select your service
-3. Click on **Manual Deploy**
-4. Choose **Clear build cache & deploy**
+5. **Create Web Service**
+   - Click "Create Web Service"
+   - Render will start deploying your application
 
-### Database Connection Issues
+## Verifying Deployment
 
-If you see database connection errors:
+After deployment is complete:
 
-1. Ensure your `DATABASE_URL` is correct and points to a Neon serverless PostgreSQL database
-2. Check that the database is not paused (if using Neon's free tier)
-3. Verify the IP of your Render service is allowed in Neon's connection settings
+1. Check the logs for any errors
+2. Visit your Render URL (e.g., `https://beyond-grooming.onrender.com`)
+3. Verify that:
+   - The login page loads correctly
+   - You can log in with your credentials
+   - The barber dashboard loads with queue data
+   - WebSocket connections are working (real-time updates)
+   - Database operations are functioning
 
-### Missing SMS Notifications
+## Troubleshooting
 
-If SMS notifications aren't working:
+If you encounter issues:
 
-1. Double-check that both `CLICKSEND_API_KEY` and `CLICKSEND_USERNAME` environment variables are set
-2. Verify the values match your ClickSend account
-3. Ensure you have credit available in your ClickSend account
+1. **Database Connection Problems**
+   - Verify the `DATABASE_URL` is correct
+   - Check that the database is accessible from Render's IP ranges
+   - Confirm your database has the necessary tables (run migrations if needed)
+
+2. **WebSocket Connection Issues**
+   - Ensure the application is using the correct WebSocket URL
+   - Check browser console for WebSocket connection errors
+
+3. **Static File Serving Issues**
+   - Verify that the build process completed successfully
+   - Check that the `dist/public` directory contains all frontend assets
+
+4. **SMS Notification Problems**
+   - Verify your ClickSend credentials
+   - Check the logs for API call errors
+
+## Support
+
+If you need assistance with your deployment, please contact:
+- Render Support: https://render.com/docs
+- Or reach out to your development team for application-specific issues

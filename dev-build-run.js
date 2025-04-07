@@ -1,53 +1,66 @@
 /**
  * Development script to build the client and then run the server
  */
-import { execSync, spawn } from 'child_process';
+
+import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-// Get current file directory (equivalent to __dirname in CommonJS)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+console.log('🛠️ Development Build & Run Tool');
 
-// Detect environment
-const isProduction = process.env.NODE_ENV === 'production';
-const isReplitEnv = process.env.REPL_ID && process.env.REPL_OWNER;
+// Check if client needs building
+const publicPath = path.join(process.cwd(), 'server', 'public');
+const needsBuild = !fs.existsSync(publicPath);
 
-console.log(`Environment: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
-console.log(`Replit Environment: ${isReplitEnv ? 'YES' : 'NO'}`);
-
-// If in Replit and production, use our static server approach
-if (isReplitEnv) {
-  console.log('🔄 Running in Replit environment, using static server approach...');
+if (needsBuild) {
+  console.log('🔨 Building client for development...');
   
-  try {
-    // Check if we need to build
-    const distDir = path.join(__dirname, 'dist');
-    const publicDir = path.join(distDir, 'public');
-    const indexHtml = path.join(publicDir, 'index.html');
-    
-    if (!fs.existsSync(indexHtml)) {
-      console.log('📦 Building application...');
-      execSync('npm run build', { stdio: 'inherit' });
+  // Run a quick Vite build just to generate the needed files
+  const buildProcess = spawn('vite', ['build', '--mode', 'development'], { 
+    stdio: 'inherit',
+    shell: true
+  });
+  
+  buildProcess.on('exit', (code) => {
+    if (code !== 0) {
+      console.error('❌ Development build failed');
+      process.exit(1);
     }
     
-    // Start the static server
-    console.log('🚀 Starting server in Replit environment...');
-    // Use dynamic import for ES modules
-    const startTime = Date.now();
-    const staticServer = await import('./dist/static-server.js');
-    const loadTime = Date.now() - startTime;
-    console.log(`⭐ Server module loaded in ${loadTime}ms`);
-  } catch (error) {
-    console.error('❌ Error:', error);
-    process.exit(1);
-  }
+    console.log('✅ Development build completed');
+    
+    // Create necessary directories
+    if (!fs.existsSync(path.dirname(publicPath))) {
+      fs.mkdirSync(path.dirname(publicPath), { recursive: true });
+    }
+    
+    // Copy the built files to the server/public directory
+    try {
+      fs.cpSync(path.join(process.cwd(), 'dist', 'public'), publicPath, { recursive: true });
+      console.log('🔄 Development files copied to server/public');
+    } catch (error) {
+      console.error('Error copying files:', error);
+    }
+    
+    // Run the development server
+    runDevServer();
+  });
 } else {
-  // In development mode or non-Replit environment, use the development server
-  console.log('🔄 Running in development mode...');
-  execSync('tsx server/index.ts', { stdio: 'inherit' });
+  console.log('✅ Development build already exists');
+  runDevServer();
 }
 
-// For module compatibility
-export {};
+function runDevServer() {
+  console.log('🚀 Starting development server...');
+  
+  // Start the development server
+  const serverProcess = spawn('npm', ['run', 'dev'], { 
+    stdio: 'inherit',
+    shell: true
+  });
+  
+  serverProcess.on('exit', (code) => {
+    console.log(`Development server exited with code ${code}`);
+    process.exit(code || 0);
+  });
+}

@@ -1,26 +1,24 @@
 #!/bin/bash
 
-# Beyond Grooming - Special Replit startup script
-echo "💈 Beyond Grooming - Replit Startup Script 💈"
+# Special script for Replit Workflow
+echo "💈 Beyond Grooming - Replit Mode 💈"
 
-# Set production environment 
+# Set production mode and any Replit-specific variables
 export NODE_ENV=production
 
-echo "📦 Building application for Replit environment..."
-npm run build
-
-if [ $? -ne 0 ]; then
-  echo "❌ Build failed! Exiting."
-  exit 1
+# Check if build exists
+if [ ! -d "dist" ] || [ ! -f "dist/static-server.js" ] || [ ! -d "dist/public" ]; then
+  echo "📦 Build needed, running npm build..."
+  npm run build
+  if [ $? -ne 0 ]; then
+    echo "❌ Build failed!"
+    exit 1
+  fi
+  echo "✅ Build completed successfully"
+else
+  echo "✅ Using existing build"
 fi
 
-echo "✅ Build successful"
-
-# Debug: Show what's in the dist directory
-echo "📂 Checking build output..."
-ls -la dist
-ls -la dist/public
-
-# Start server directly 
-echo "🚀 Starting server in Replit environment..."
-node dist/static-server.js
+# Start server using our production script
+echo "🚀 Starting server in production mode..."
+node run-static.js

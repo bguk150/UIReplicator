@@ -1,25 +1,24 @@
 #!/bin/bash
 
-# Beyond Grooming - Rebuild and Start Script
-echo "💈 Beyond Grooming - Rebuild and Start Script 💈"
+# Beyond Grooming - Rebuild and Start
+# This script rebuilds the app and starts it in production mode
 
-# Set production environment
+# Set production mode
 export NODE_ENV=production
 
-# Clean up any old processes
-pkill -f "node dist/static-server.js" || true
+# Clean previous build
+rm -rf dist
 
-# Force a rebuild
-echo "📦 Rebuilding application..."
+# Build the app
+echo "🔨 Building application..."
 npm run build
 
+# Check if build succeeded
 if [ $? -ne 0 ]; then
   echo "❌ Build failed!"
   exit 1
 fi
 
-echo "✅ Build completed successfully!"
-
-# Start the server directly
-echo "🚀 Starting server..."
-node dist/static-server.js
+# Start the app in production mode
+echo "🚀 Starting application in production mode..."
+node run-static.js
