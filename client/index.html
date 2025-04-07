@@ -25,7 +25,36 @@
           return originalConsoleLog.apply(console, args);
         };
       });
+
+      // Custom error handler to prevent Vite's error overlay
+      window.addEventListener('error', function(event) {
+        // Log the error to console but prevent the default error overlay
+        console.error('Application error:', event.error);
+        
+        // Prevent Vite from showing its error overlay
+        event.preventDefault();
+        
+        // Don't stop the app from running
+        return true;
+      });
+      
+      // Prevent unhandled promise rejection error overlay
+      window.addEventListener('unhandledrejection', function(event) {
+        console.error('Unhandled promise rejection:', event.reason);
+        event.preventDefault();
+        return true;
+      });
     </script>
+    <!-- Prevent the runtime errors from showing up as overlay -->
+    <style>
+      /* Hide Vite error overlay */
+      #vite-error-overlay {
+        display: none !important;
+      }
+      .err-box, [class*="error-overlay"] {
+        display: none !important;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
