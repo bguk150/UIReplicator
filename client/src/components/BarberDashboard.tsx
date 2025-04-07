@@ -156,30 +156,30 @@ export default function BarberDashboard() {
         </Button>
       </div>
 
-      {/* Super Simple Tab Navigation with maximum visibility */}
-      <div className="mb-8">
-        <h2 className="text-xl font-bold mb-4 text-center">VIEW OPTIONS</h2>
+      {/* Tab Navigation with appropriate sizing */}
+      <div className="mb-6">
+        <h2 className="text-lg font-bold mb-3 text-center">VIEW OPTIONS</h2>
         <div className="flex flex-col gap-2">
           <button
             onClick={() => setActiveTab("queue")}
-            className={`p-6 text-center text-xl font-bold rounded-lg ${
+            className={`p-4 text-center text-base font-bold rounded-lg ${
               activeTab === "queue"
                 ? "bg-blue-600 text-white"
                 : "bg-gray-700 text-gray-200 hover:bg-gray-600"
             }`}
           >
-            <Users className="h-8 w-8 mx-auto mb-2" />
+            <Users className="h-5 w-5 mx-auto mb-1" />
             VIEW ACTIVE QUEUE
           </button>
           <button
             onClick={() => setActiveTab("database")}
-            className={`p-6 text-center text-xl font-bold rounded-lg ${
+            className={`p-4 text-center text-base font-bold rounded-lg ${
               activeTab === "database"
                 ? "bg-blue-600 text-white"
                 : "bg-gray-700 text-gray-200 hover:bg-gray-600"
             }`}
           >
-            <ClipboardList className="h-8 w-8 mx-auto mb-2" />
+            <ClipboardList className="h-5 w-5 mx-auto mb-1" />
             VIEW CUSTOMER DATABASE
           </button>
         </div>
