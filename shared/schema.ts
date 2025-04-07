@@ -10,6 +10,7 @@ export const queue = pgTable("queue", {
   service_type: text("service_type").notNull(),
   service_price: text("service_price").default(""),
   service_category: text("service_category").default(""),
+  selected_extras: text("selected_extras").default(""),
   payment_method: text("payment_method").notNull(),
   check_in_time: timestamp("check_in_time").defaultNow().notNull(),
   status: text("status").default("Waiting").notNull(),
@@ -37,6 +38,7 @@ export const queueFormSchema = insertQueueSchema.extend({
     .regex(/^(07\d{9}|7\d{9})$/, "Please enter a valid UK mobile number (e.g., 7XXXXXXXXX)"),
   service_price: z.string().min(1, "Service price is required"),
   service_category: z.string().min(1, "Service category is required"),
+  selected_extras: z.string().optional().default(""),
 });
 
 // Login Schema

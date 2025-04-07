@@ -121,6 +121,11 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
                 Category: {customer.service_category}
               </div>
             )}
+            {customer.selected_extras && (
+              <div className="text-xs text-gray-400 ml-6 mt-1">
+                Extras: {customer.selected_extras}
+              </div>
+            )}
           </div>
           <div className="text-gray-300 flex items-center">
             <Phone className="h-4 w-4 mr-2 text-gray-400" />

@@ -1,4 +1,4 @@
-import { User, Phone, Scissors, CreditCard, Clock, Info } from "lucide-react";
+import { User, Phone, Scissors, CreditCard, Clock, Info, X } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
@@ -6,7 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { QueueFormData, queueFormSchema } from "@shared/schema";
 import { queueService } from "@/lib/supabase";
-import { serviceMenu, getServicePriceByName, getServiceCategoryByName } from "@/lib/serviceData";
+import { serviceMenu, getServicePriceByName, getServiceCategoryByName, Service } from "@/lib/serviceData";
 
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -23,12 +23,14 @@ import {
 import { Container, HeaderIcon, PageContainer } from "@/components/ui/container";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export default function CheckInPage() {
   const [paymentMethod, setPaymentMethod] = useState<"Cash" | "Card">("Cash");
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [servicePrice, setServicePrice] = useState<string | null>(null);
   const [serviceCategory, setServiceCategory] = useState<string | null>(null);
+  const [selectedExtras, setSelectedExtras] = useState<Service[]>([]);
   const { toast } = useToast();
   
   const form = useForm<QueueFormData>({
@@ -39,6 +41,7 @@ export default function CheckInPage() {
       service_type: "",
       service_price: "",
       service_category: "",
+      selected_extras: "",
       payment_method: "Cash",
     },
   });
@@ -71,12 +74,14 @@ export default function CheckInPage() {
         service_type: "",
         service_price: "",
         service_category: "",
+        selected_extras: "",
         payment_method: "Cash",
       });
       setPaymentMethod("Cash");
       setSelectedService(null);
       setServicePrice(null);
       setServiceCategory(null);
+      setSelectedExtras([]);
     },
     onError: (error) => {
       toast({
@@ -101,6 +106,44 @@ export default function CheckInPage() {
   function handleServiceChange(serviceName: string) {
     setSelectedService(serviceName);
     form.setValue("service_type", serviceName);
+    // Reset extras when main service changes
+    setSelectedExtras([]);
+    form.setValue("selected_extras", "");
+  }
+  
+  function handleExtraToggle(extra: Service) {
+    let updatedExtras;
+    
+    if (selectedExtras.some(item => item.id === extra.id)) {
+      // Remove if already selected
+      updatedExtras = selectedExtras.filter(item => item.id !== extra.id);
+    } else {
+      // Add if not selected
+      updatedExtras = [...selectedExtras, extra];
+    }
+    
+    setSelectedExtras(updatedExtras);
+    
+    // Update form value with joined extras string
+    const extrasString = updatedExtras.map(item => item.name).join(", ");
+    form.setValue("selected_extras", extrasString);
+  }
+  
+  function getTotalPrice() {
+    if (!servicePrice) return "";
+    
+    // Get the base price from the main service
+    const basePrice = servicePrice.replace(/[^0-9£+.]/g, "");
+    
+    // Calculate extras total
+    const extrasTotal = selectedExtras.reduce((sum, extra) => {
+      const extraPrice = extra.price.replace(/[^0-9£+.]/g, "");
+      const numPrice = parseFloat(extraPrice.replace("£", ""));
+      return sum + (isNaN(numPrice) ? 0 : numPrice);
+    }, 0);
+    
+    // For simple display, just show the extras amount
+    return extrasTotal > 0 ? `+£${extrasTotal} for extras` : "";
   }
   
   return (
@@ -216,8 +259,66 @@ export default function CheckInPage() {
                     <span className="text-gray-400">Category:</span>
                     <span>{serviceCategory}</span>
                   </div>
+                  
+                  {getTotalPrice() && (
+                    <div className="flex justify-between mt-1 text-sm">
+                      <span className="text-gray-400">Additional:</span>
+                      <span className="text-secondary">{getTotalPrice()}</span>
+                    </div>
+                  )}
+                  
+                  {selectedExtras.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {selectedExtras.map(extra => (
+                        <Badge key={extra.id} variant="outline" className="flex items-center gap-1">
+                          {extra.name}
+                          <button 
+                            type="button"
+                            onClick={() => handleExtraToggle(extra)}
+                            className="ml-1 text-gray-400 hover:text-white"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
+            )}
+            
+            {/* Extras Selection */}
+            {selectedService && (
+              <FormField
+                control={form.control}
+                name="selected_extras"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Add Extras <span className="text-gray-400 text-xs">(Optional)</span></FormLabel>
+                    <div className="grid grid-cols-2 gap-2">
+                      {serviceMenu
+                        .find(category => category.id === "extras")?.services
+                        .map(extra => (
+                          <Button
+                            key={extra.id}
+                            type="button"
+                            variant="outline"
+                            className={`flex justify-between items-center h-auto py-2 ${
+                              selectedExtras.some(item => item.id === extra.id) 
+                                ? "bg-secondary text-white border-secondary" 
+                                : "bg-gray-800 text-gray-300"
+                            }`}
+                            onClick={() => handleExtraToggle(extra)}
+                          >
+                            <span>{extra.name}</span>
+                            <Badge variant="secondary" className="ml-2">{extra.price}</Badge>
+                          </Button>
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
             
             <FormField
