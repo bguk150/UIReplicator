@@ -6,6 +6,7 @@ import { RefreshCw, Users, Clock, Wifi, WifiOff, ClipboardList } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatsCard } from "@/components/ui/stats-card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import CustomerCard from "@/components/CustomerCard";
 import CustomerDatabase from "@/components/CustomerDatabase";
 import { useToast } from "@/hooks/use-toast";
@@ -156,37 +157,8 @@ export default function BarberDashboard() {
         </Button>
       </div>
 
-      {/* Tab Navigation with side-by-side buttons */}
-      <div className="mb-6">
-        <h2 className="text-lg font-bold mb-3 text-center">VIEW OPTIONS</h2>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={() => setActiveTab("queue")}
-            className={`p-3 text-center text-base font-bold rounded-lg flex flex-col items-center justify-center ${
-              activeTab === "queue"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-700 text-gray-200 hover:bg-gray-600"
-            }`}
-          >
-            <Users className="h-5 w-5 mb-1" />
-            ACTIVE QUEUE
-          </button>
-          <button
-            onClick={() => setActiveTab("database")}
-            className={`p-3 text-center text-base font-bold rounded-lg flex flex-col items-center justify-center ${
-              activeTab === "database"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-700 text-gray-200 hover:bg-gray-600"
-            }`}
-          >
-            <ClipboardList className="h-5 w-5 mb-1" />
-            CUSTOMER DATABASE
-          </button>
-        </div>
-      </div>
-
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {isStatsLoading ? (
           <>
             <Skeleton className="h-32 w-full" />
@@ -209,14 +181,27 @@ export default function BarberDashboard() {
           </>
         )}
       </div>
-      
-      {/* Conditionally render based on active tab with clear labels */}
-      <div className="border p-4 rounded-lg bg-gray-800">
-        <h2 className="text-xl font-bold mb-4">
-          {activeTab === "queue" ? "Active Queue" : "Customer Database"}
-        </h2>
-      
-        {activeTab === "queue" && (
+
+      {/* Shadcn Tabs Component */}
+      <Tabs 
+        defaultValue="queue" 
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="w-full"
+      >
+        <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsTrigger value="queue" className="flex items-center gap-2 py-2">
+            <Users className="h-4 w-4" />
+            Active Queue
+          </TabsTrigger>
+          <TabsTrigger value="database" className="flex items-center gap-2 py-2">
+            <ClipboardList className="h-4 w-4" />
+            Customer Database
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="queue" className="border p-4 rounded-lg bg-gray-800 mt-2">
+          <h2 className="text-xl font-bold mb-4">Active Queue</h2>
           <div className="space-y-5">
             {isQueueLoading ? (
               <>
@@ -233,12 +218,13 @@ export default function BarberDashboard() {
               </div>
             )}
           </div>
-        )}
+        </TabsContent>
         
-        {activeTab === "database" && (
+        <TabsContent value="database" className="border p-4 rounded-lg bg-gray-800 mt-2">
+          <h2 className="text-xl font-bold mb-4">Customer Database</h2>
           <CustomerDatabase />
-        )}
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
