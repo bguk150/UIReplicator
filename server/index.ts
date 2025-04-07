@@ -126,18 +126,9 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // Determine if we're in development or production mode
-  const isDevelopment = process.env.NODE_ENV !== 'production';
-  
-  if (isDevelopment) {
-    // Use Vite's dev server in development mode
-    log("Setting up Vite development server");
-    await setupVite(app, server);
-  } else {
-    // Serve static files in production mode
-    log("Serving static files for production");
-    serveStatic(app);
-  }
+  // Force production mode to ensure stability in Replit
+  log("Setting up in production mode for stability");
+  serveStatic(app);
 
   const port = process.env.PORT || 5000;
   server.listen({
