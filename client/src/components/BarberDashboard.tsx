@@ -183,13 +183,33 @@ export default function BarberDashboard() {
       </div>
 
       {/* Tabs for Queue and Customer Database */}
-      <Tabs defaultValue="queue" value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="queue">Active Queue</TabsTrigger>
-          <TabsTrigger value="database">Customer Database</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="queue" className="space-y-5">
+      <div className="border-b mb-6">
+        <div className="flex space-x-4">
+          <button
+            onClick={() => setActiveTab("queue")}
+            className={`py-2 px-4 font-medium ${
+              activeTab === "queue"
+                ? "border-b-2 border-primary text-primary"
+                : "text-muted-foreground"
+            }`}
+          >
+            Active Queue
+          </button>
+          <button
+            onClick={() => setActiveTab("database")}
+            className={`py-2 px-4 font-medium ${
+              activeTab === "database"
+                ? "border-b-2 border-primary text-primary"
+                : "text-muted-foreground"
+            }`}
+          >
+            Customer Database
+          </button>
+        </div>
+      </div>
+      
+      {activeTab === "queue" && (
+        <div className="space-y-5">
           {isQueueLoading ? (
             <>
               <Skeleton className="h-32 w-full" />
@@ -204,12 +224,12 @@ export default function BarberDashboard() {
               <p className="text-lg text-gray-300">No customers in the queue</p>
             </div>
           )}
-        </TabsContent>
-        
-        <TabsContent value="database">
-          <CustomerDatabase />
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
+      
+      {activeTab === "database" && (
+        <CustomerDatabase />
+      )}
     </div>
   );
 }
