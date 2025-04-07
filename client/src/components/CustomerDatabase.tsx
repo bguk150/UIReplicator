@@ -114,7 +114,8 @@ export default function CustomerDatabase() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Customer Database</h2>
+        {/* Removed duplicate "Customer Database" heading */}
+        <div className="flex-1"></div>
         <div className="flex gap-2">
           <Button onClick={handleRefresh} variant="outline" size="sm">
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -137,8 +138,8 @@ export default function CustomerDatabase() {
         />
       </div>
 
-      {/* Customer view toggle */}
-      <div className="flex items-center space-x-2">
+      {/* Customer view toggle - centered */}
+      <div className="flex items-center justify-center space-x-2 py-2 border-b border-gray-700 mb-2">
         <Switch
           id="unique-customers"
           checked={showUniqueCustomers}

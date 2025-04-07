@@ -189,12 +189,12 @@ export default function BarberDashboard() {
         onValueChange={setActiveTab}
         className="w-full"
       >
-        <TabsList className="grid w-full grid-cols-2 mb-4">
-          <TabsTrigger value="queue" className="flex items-center gap-2 py-2">
+        <TabsList className="grid w-full grid-cols-2 mb-4 justify-center">
+          <TabsTrigger value="queue" className="flex items-center justify-center gap-2 py-2">
             <Users className="h-4 w-4" />
             Active Queue
           </TabsTrigger>
-          <TabsTrigger value="database" className="flex items-center gap-2 py-2">
+          <TabsTrigger value="database" className="flex items-center justify-center gap-2 py-2">
             <ClipboardList className="h-4 w-4" />
             Customer Database
           </TabsTrigger>
@@ -221,7 +221,6 @@ export default function BarberDashboard() {
         </TabsContent>
         
         <TabsContent value="database" className="border p-4 rounded-lg bg-gray-800 mt-2">
-          <h2 className="text-xl font-bold mb-4">Customer Database</h2>
           <CustomerDatabase />
         </TabsContent>
       </Tabs>
