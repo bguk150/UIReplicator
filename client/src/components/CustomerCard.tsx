@@ -20,14 +20,14 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
   // Format check-in time to HH:MM:SS
   const formattedTime = format(new Date(customer.check_in_time), "HH:mm:ss");
   
-  // Mutation for verifying cash payment
-  const verifyCashMutation = useMutation({
+  // Mutation for verifying any payment (cash or card)
+  const verifyPaymentMutation = useMutation({
     mutationFn: () => queueService.verifyCashPayment(customer.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/queue'] });
       queryClient.invalidateQueries({ queryKey: ['/api/queue/stats'] });
       toast({
-        title: "Cash Verified",
+        title: customer.payment_method === "Cash" ? "Cash Verified" : "Card Verified",
         description: null, // No description for cleaner notification
         duration: 1000, // 1 second
       });
@@ -97,8 +97,12 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
               </>
             ) : (
               <>
-                <CreditCard className="text-blue-400 h-4 w-4 mr-2" />
-                <span className="text-gray-300">Card</span>
+                <CreditCard className={`h-4 w-4 mr-2 ${
+                  customer.payment_verified === "Yes" ? "text-green-400" : "text-blue-400"
+                }`} />
+                <span className="text-gray-300">
+                  Card {customer.payment_verified === "Yes" ? "✓" : "(Not Verified)"}
+                </span>
               </>
             )}
           </div>
@@ -141,17 +145,17 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
             </Badge>
           )}
           
-          {/* Cash verification button (only for cash payments that aren't verified) */}
-          {customer.payment_method === "Cash" && customer.payment_verified === "No" && (
+          {/* Payment verification button (for both cash and card payments that aren't verified) */}
+          {customer.payment_verified === "No" && (
             <Button 
               variant="outline" 
               size="sm"
               className="btn-blue"
-              onClick={() => verifyCashMutation.mutate()}
-              disabled={verifyCashMutation.isPending}
+              onClick={() => verifyPaymentMutation.mutate()}
+              disabled={verifyPaymentMutation.isPending}
             >
               <Check className="h-4 w-4 mr-2" />
-              Verify Cash
+              Verify {customer.payment_method === "Cash" ? "Cash" : "Card"}
             </Button>
           )}
           
