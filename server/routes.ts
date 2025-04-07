@@ -546,6 +546,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   httpServer.on('listening', () => {
     console.log('HTTP server is now listening, initializing WebSocket server');
     
+    // Add more detailed environment information for debugging
+    console.log('WebSocket server environment details:');
+    console.log('- NODE_ENV:', process.env.NODE_ENV || 'not set');
+    console.log('- Render detection:', !!process.env.RENDER || !!process.env.RENDER_EXTERNAL_URL);
+    console.log('- Server port:', httpServer.address() ? 
+      (typeof httpServer.address() === 'string' ? 
+        httpServer.address() : 
+        (httpServer.address() as any)?.port) : 
+      'unknown');
+    
     // Initialize WebSocket server with enhanced configuration for Render compatibility
     wss = new WebSocketServer({ 
       server: httpServer, 
@@ -558,6 +568,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Check for Render's environment variables to enable special handling
         const isRender = !!process.env.RENDER || !!process.env.RENDER_EXTERNAL_URL;
+        
+        // Enhanced debug logging for all environments
+        console.log('WebSocket verifyClient called:');
+        console.log('- Origin:', info.origin || 'none');
+        console.log('- Secure:', info.secure ? 'yes' : 'no');
+        console.log('- URL path:', info.req.url || 'unknown');
+        console.log('- Headers present:', Object.keys(info.req.headers).join(', '));
         
         if (isRender) {
           console.log("Render production environment detected - accepting all WebSocket connections");

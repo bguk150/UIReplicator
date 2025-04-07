@@ -58,43 +58,79 @@ class WebSocketManager {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       const host = window.location.host;
       
-      // Enhanced production environment detection
-      const isRender = window.location.hostname.includes('onrender.com');
-      const isReplit = window.location.hostname.includes('replit.app');
-      const isProduction = isRender || isReplit || window.location.hostname.includes('render.com');
+      // Enhanced production environment detection with more detailed logging
+      const hostname = window.location.hostname;
+      const isRender = hostname.includes('onrender.com');
+      const isReplit = hostname.includes('replit.app') || hostname.includes('replit.dev');
+      const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+      const isProduction = isRender || isReplit || hostname.includes('render.com');
       
-      // Enhanced logging for all environments
-      console.log('Current environment:', {
-        hostname: window.location.hostname,
+      // Extra debugging information for WebSocket connection issues
+      console.log('WebSocket connection environment:', {
+        hostname,
+        host,
+        protocol: window.location.protocol,
+        port: window.location.port,
+        pathname: window.location.pathname,
+        href: window.location.href,
         isProduction,
         isRender,
         isReplit,
-        protocol,
-        host
+        isLocalhost,
+        wsProtocol: protocol
       });
       
+      // Apply environment-specific settings
       if (isProduction) {
         // For production, add a longer timeout and more reconnection attempts
         this.maxReconnectAttempts = 15; // Increase for more persistent reconnections in production
         
-        if (isRender) {
+        // For Replit specifically, we need special handling
+        if (isReplit) {
+          console.log('Replit environment detected for WebSocket');
+          
+          // For Replit, use a special development detection
+          const isReplitDev = 
+            // Check for dev-specific domains
+            hostname.includes('.replit.dev') || 
+            // Also check if running on dev ports
+            (hostname.includes('.replit.app') && (window.location.port === '3000' || window.location.port === '5000'));
+          
+          // Replit dev environment
+          if (isReplitDev) {
+            console.log('Replit development environment detected');
+            return `${protocol}//${host}/ws`;
+          } 
+          // Replit production environment
+          else {
+            console.log('Replit production environment detected');
+            return `${protocol}//${host}/ws`;
+          }
+        }
+        // For Render, ensure we use their specific patterns
+        else if (isRender) {
+          console.log('Render environment detected for WebSocket');
           // For Render, always use wss:// protocol and the exact host with explicit /ws path
           // This is critical for Render's proxy system
-          const renderHost = host;
-          console.log('Using Render-specific WebSocket URL with explicit /ws path');
-          return `wss://${renderHost}/ws`;
-        } else if (isReplit) {
-          // For Replit, use the host with explicit /ws path
-          console.log('Using Replit-specific WebSocket URL');
-          return `${protocol}//${host}/ws`;
-        } else {
-          // For other production environments
-          console.log('Using generic production WebSocket URL');
+          return `wss://${host}/ws`;
+        } 
+        // For other production environments
+        else {
+          console.log('Generic production environment detected for WebSocket');
           return `${protocol}//${host}/ws`;
         }
-      } else {
-        // Standard development environment
-        console.log('Using development WebSocket URL');
+      } 
+      // Development and localhost handling
+      else {
+        console.log('Development environment detected for WebSocket');
+        
+        // Special handling for localhost with server port
+        if (isLocalhost) {
+          const port = window.location.port || '5000'; // Default to 5000 if no port specified
+          console.log(`Using localhost WebSocket URL with port ${port}`);
+          return `${protocol}//localhost:${port}/ws`;
+        }
+        
         return `${protocol}//${host}/ws`;
       }
     };

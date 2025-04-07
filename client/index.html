@@ -3,6 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>Beyond Grooming - Queue Management</title>
+    <meta name="description" content="Modern barbershop queue management system" />
+    <!-- Force reload if connection issues occur -->
+    <script>
+      // Connection status monitoring for Replit
+      window.addEventListener('DOMContentLoaded', () => {
+        // Monitor for connection issues and reload if stuck
+        let viteConnectionAttempts = 0;
+        const MAX_VITE_CONNECTION_ATTEMPTS = 20;
+        
+        const originalConsoleLog = console.log;
+        console.log = function(...args) {
+          if (args[0] === '[vite] server connection lost. Polling for restart...') {
+            viteConnectionAttempts++;
+            if (viteConnectionAttempts >= MAX_VITE_CONNECTION_ATTEMPTS) {
+              originalConsoleLog('Too many failed connection attempts, triggering page reload');
+              window.location.reload();
+            }
+          }
+          return originalConsoleLog.apply(console, args);
+        };
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>

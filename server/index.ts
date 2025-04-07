@@ -21,10 +21,16 @@ app.use((req, res, next) => {
   // Check for Render's environment
   const isRender = !!process.env.RENDER || !!process.env.RENDER_EXTERNAL_URL;
   
-  if (isRender) {
-    // In Render production, ensure all WebSocket-related headers are preserved
-    // This fixes a common issue with proxied WebSocket connections
-    if (req.headers.upgrade?.toLowerCase() === 'websocket') {
+  // Enhanced WebSocket debugging for all environments
+  if (req.headers.upgrade?.toLowerCase() === 'websocket') {
+    console.log('WebSocket upgrade request detected:');
+    console.log('- Headers:', JSON.stringify(req.headers));
+    console.log('- Path:', req.path);
+    console.log('- Environment:', isRender ? 'Render' : (process.env.NODE_ENV || 'development'));
+    
+    if (isRender) {
+      // In Render production, ensure all WebSocket-related headers are preserved
+      // This fixes a common issue with proxied WebSocket connections
       console.log('Processing WebSocket upgrade request in Render environment');
     }
   }
