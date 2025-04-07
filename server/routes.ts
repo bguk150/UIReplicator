@@ -287,10 +287,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Helper function to set up MemoryStore (used for development or as fallback)
   function setupMemoryStore() {
     const SessionStore = MemoryStore(session);
+    
+    // Enhanced session store with detailed logging
+    const sessionStore = new SessionStore({
+      checkPeriod: 86400000, // 24 hours
+      // Log detailed sessions for troubleshooting
+      ...(process.env.DEBUG_SESSION === 'true' ? {
+        storeCallback: (session: any) => {
+          console.log("Session stored:", session.id);
+        },
+        destroyCallback: (session: any) => {
+          console.log("Session destroyed:", session);
+        }
+      } : {})
+    });
+    
+    // Log session configuration for easier debugging
+    console.log(`Setting up session with:
+      - Environment: ${isProduction ? 'Production' : 'Development'}${isRender ? ' (Render)' : ''}
+      - Secure cookies: ${isProduction}
+      - SameSite: ${isProduction ? 'none' : 'lax'}
+      - Cookie domain: ${isRender && process.env.RENDER_EXTERNAL_HOSTNAME ? process.env.RENDER_EXTERNAL_HOSTNAME : 'not specified'}
+      - Proxy trusted: true
+    `);
+    
     app.use(session({
       secret: process.env.SESSION_SECRET || 'beyond-grooming-secret',
       resave: false,
       saveUninitialized: false,
+      rolling: true, // Reset expiration with each request
       proxy: true, // Trust the first proxy (critical for Render.com)
       cookie: {
         secure: isProduction, // Secure in production, non-secure in dev
@@ -303,9 +328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           domain: process.env.RENDER_EXTERNAL_HOSTNAME || undefined
         } : {})
       },
-      store: new SessionStore({
-        checkPeriod: 86400000 // 24 hours
-      }),
+      store: sessionStore,
       name: 'beyond.sid' // Custom name to avoid the default connect.sid
     }));
   }
@@ -342,7 +365,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       req.session.userId = user.id;
       req.session.username = user.username;
       
-      return res.status(200).json({ message: "Login successful" });
+      // Force session save to ensure data persists immediately - critical for Render
+      return new Promise<void>((resolve, reject) => {
+        req.session.save(err => {
+          if (err) {
+            console.error('Error saving session:', err);
+            reject(err);
+            return res.status(500).json({ message: "Error saving session" });
+          }
+          
+          console.log('Session saved successfully:', {
+            userId: req.session.userId,
+            username: req.session.username
+          });
+          
+          resolve();
+          return res.status(200).json({ message: "Login successful" });
+        });
+      });
     } catch (error) {
       if (error instanceof ZodError) {
         const validationError = fromZodError(error);
@@ -352,17 +392,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Logout route
+  // Enhanced Logout route with robust cookie clearing
   app.post('/api/logout', (req, res) => {
+    // Get environment detection before clearing session
+    const isProduction = process.env.NODE_ENV === 'production' || !!process.env.RENDER;
+    const isRender = !!process.env.RENDER || !!process.env.RENDER_EXTERNAL_URL;
+    
+    // Log out for transparency
+    console.log(`Logging out user: ${req.session?.username || 'unknown'} (session ID: ${req.sessionID || 'none'})`);
+    console.log(`Environment: ${isProduction ? 'Production' : 'Development'}${isRender ? ' (Render)' : ''}`);
+    
+    // Carefully clear any session data first
+    if (req.session) {
+      // Explicitly unset session variables
+      req.session.userId = undefined;
+      req.session.username = undefined;
+    }
+    
+    // Then destroy the session
     req.session.destroy((err) => {
       if (err) {
-        return res.status(500).json({ message: "Failed to logout" });
+        console.error('Error destroying session during logout:', err);
+        return res.status(500).json({ message: "Failed to logout - session destruction error" });
       }
       
-      // Cookie options need to match the ones used when setting the cookie
-      const isProduction = process.env.NODE_ENV === 'production' || !!process.env.RENDER;
-      const isRender = !!process.env.RENDER || !!process.env.RENDER_EXTERNAL_URL;
+      console.log('Session successfully destroyed');
       
+      // Cookie options must exactly match the ones used when setting the cookie
+      // This is critical for proper cookie clearing, especially in secure environments
       const cookieOptions = {
         secure: isProduction,
         sameSite: isProduction ? 'none' as const : 'lax' as const,
@@ -373,23 +430,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } : {})
       };
       
-      // Clear both possible cookie names to ensure logout works
-      res.clearCookie('beyond.sid', cookieOptions);
-      res.clearCookie('connect.sid', cookieOptions); // Keep this for backward compatibility
+      console.log('Clearing cookies with options:', JSON.stringify(cookieOptions));
       
+      // Clear multiple possible cookie names to ensure thorough logout
+      // This handles potential inconsistencies in cookie naming across environments
+      res.clearCookie('beyond.sid', cookieOptions);
+      res.clearCookie('connect.sid', cookieOptions); // For backward compatibility
+      
+      console.log('Cookies cleared');
       return res.status(200).json({ message: "Logged out successfully" });
     });
   });
   
-  // Get current session user
+  // Get current session user with detailed debug information
   app.get('/api/auth/session', (req, res) => {
-    if (req.session.userId) {
+    // Enable detailed session inspection for troubleshooting  
+    const sessionId = req.sessionID || 'no-session-id';
+    const hasSession = !!req.session;
+    const isProduction = process.env.NODE_ENV === 'production' || !!process.env.RENDER;
+    const isRender = !!process.env.RENDER || !!process.env.RENDER_EXTERNAL_URL;
+    
+    console.log('Session check request: ', {
+      sessionId: sessionId,
+      hasSession: hasSession,
+      userId: req.session?.userId,
+      remoteIp: req.ip || req.socket.remoteAddress,
+      environment: isProduction ? 'Production' : 'Development',
+      isRender: isRender,
+      // Log the presence of cookies without exposing values
+      hasCookieHeader: !!req.headers.cookie,
+      cookieCount: req.headers.cookie ? req.headers.cookie.split(';').length : 0,
+      // Check for secure connection
+      isSecure: req.secure || req.headers['x-forwarded-proto'] === 'https'
+    });
+    
+    if (req.session?.userId) {
       return res.status(200).json({ 
         isLoggedIn: true, 
-        username: req.session.username 
+        username: req.session.username,
+        // Add these fields in development for debugging
+        ...(process.env.NODE_ENV !== 'production' ? {
+          sessionId: sessionId,
+          hasSession: true
+        } : {})
       });
     }
-    return res.status(200).json({ isLoggedIn: false });
+    
+    return res.status(200).json({ 
+      isLoggedIn: false,
+      // Add these fields in development for debugging
+      ...(process.env.NODE_ENV !== 'production' ? {
+        sessionId: sessionId,
+        hasSession: hasSession,
+        environment: isProduction ? 'Production' : 'Development'
+      } : {})
+    });
   });
   
   // QUEUE MANAGEMENT ROUTES

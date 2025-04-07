@@ -6,6 +6,26 @@ import cors from 'cors';
 
 const app = express();
 
+// Force detection of production environment based on multiple signals
+// This ensures we pick up both NODE_ENV and Render's specific environment
+const isProduction = 
+  process.env.NODE_ENV === 'production' || 
+  !!process.env.RENDER || 
+  !!process.env.RENDER_EXTERNAL_URL;
+
+// Special handling for Render.com deployment
+const isRender = !!process.env.RENDER || !!process.env.RENDER_EXTERNAL_URL;
+
+// Configure Express to trust the proxy, required for secure cookies to work in Render/production
+if (isProduction) {
+  // Configure Express to trust proxy headers
+  app.set('trust proxy', 1); // trust first proxy
+  console.log("Enabled 'trust proxy' for production environment");
+}
+
+// Log the database configuration to help with debugging
+console.log(`Database configuration for: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}${isRender ? ' (Render)' : ''}`);
+
 // Enhanced CORS configuration for WebSocket and cross-origin requests
 // Specifically optimized for production environments like Render with proxy systems
 app.use(cors({
