@@ -156,24 +156,32 @@ export default function BarberDashboard() {
         </Button>
       </div>
 
-      {/* Tabs for Queue and Customer Database */}
-      <div className="flex gap-4 mb-6">
-        <Button
-          onClick={() => setActiveTab("queue")}
-          variant={activeTab === "queue" ? "default" : "outline"}
-          className="flex-1 py-6"
-        >
-          <Users className="mr-2 h-5 w-5" />
-          Active Queue
-        </Button>
-        <Button
-          onClick={() => setActiveTab("database")}
-          variant={activeTab === "database" ? "default" : "outline"}
-          className="flex-1 py-6"
-        >
-          <ClipboardList className="mr-2 h-5 w-5" />
-          Customer Database
-        </Button>
+      {/* Simple Tab Navigation with increased visibility */}
+      <div className="mb-8 border-2 border-gray-700 rounded-lg overflow-hidden">
+        <div className="grid grid-cols-2 bg-gray-800">
+          <button
+            onClick={() => setActiveTab("queue")}
+            className={`py-4 text-center text-lg font-bold flex items-center justify-center ${
+              activeTab === "queue"
+                ? "bg-primary text-primary-foreground"
+                : "text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            <Users className="h-5 w-5 mr-2" />
+            Active Queue
+          </button>
+          <button
+            onClick={() => setActiveTab("database")}
+            className={`py-4 text-center text-lg font-bold flex items-center justify-center ${
+              activeTab === "database"
+                ? "bg-primary text-primary-foreground"
+                : "text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            <ClipboardList className="h-5 w-5 mr-2" />
+            Customer Database
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -201,28 +209,35 @@ export default function BarberDashboard() {
         )}
       </div>
       
-      {activeTab === "queue" && (
-        <div className="space-y-5">
-          {isQueueLoading ? (
-            <>
-              <Skeleton className="h-32 w-full" />
-              <Skeleton className="h-32 w-full" />
-            </>
-          ) : sortedQueue.length > 0 ? (
-            sortedQueue.map((customer: Queue) => (
-              <CustomerCard key={customer.id} customer={customer} />
-            ))
-          ) : (
-            <div className="p-5 rounded-xl shadow-lg gradient-card text-center">
-              <p className="text-lg text-gray-300">No customers in the queue</p>
-            </div>
-          )}
-        </div>
-      )}
+      {/* Conditionally render based on active tab with clear labels */}
+      <div className="border p-4 rounded-lg bg-gray-800">
+        <h2 className="text-xl font-bold mb-4">
+          {activeTab === "queue" ? "Active Queue" : "Customer Database"}
+        </h2>
       
-      {activeTab === "database" && (
-        <CustomerDatabase />
-      )}
+        {activeTab === "queue" && (
+          <div className="space-y-5">
+            {isQueueLoading ? (
+              <>
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-32 w-full" />
+              </>
+            ) : sortedQueue.length > 0 ? (
+              sortedQueue.map((customer: Queue) => (
+                <CustomerCard key={customer.id} customer={customer} />
+              ))
+            ) : (
+              <div className="p-5 rounded-xl shadow-lg gradient-card text-center">
+                <p className="text-lg text-gray-300">No customers in the queue</p>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {activeTab === "database" && (
+          <CustomerDatabase />
+        )}
+      </div>
     </div>
   );
 }
