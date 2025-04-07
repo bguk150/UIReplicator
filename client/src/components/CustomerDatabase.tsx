@@ -1,16 +1,19 @@
-import { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queueService } from "@/lib/supabase";
 import { Queue } from "@shared/schema";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { RefreshCw, Download, Search } from "lucide-react";
+import { RefreshCw, Download, Search, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, parseISO } from "date-fns";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export default function CustomerDatabase() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [showUniqueCustomers, setShowUniqueCustomers] = useState(false);
   
   // Query to fetch all customer records
   const { data: customers, isLoading, refetch } = useQuery<Queue[]>({
@@ -34,8 +37,31 @@ export default function CustomerDatabase() {
     }
   };
 
+  // Filter for unique customers by phone number (showing only the most recent entry)
+  const uniqueCustomers = useMemo(() => {
+    if (!customers) return [];
+    
+    // Create a map to store the most recent record for each phone number
+    const phoneMap = new Map();
+    
+    // Sort customers by check-in time (newest first)
+    const sortedCustomers = [...customers].sort((a, b) => 
+      new Date(b.check_in_time).getTime() - new Date(a.check_in_time).getTime()
+    );
+    
+    // Add only the first occurrence of each phone number (most recent)
+    sortedCustomers.forEach(customer => {
+      if (!phoneMap.has(customer.phone_number)) {
+        phoneMap.set(customer.phone_number, customer);
+      }
+    });
+    
+    // Convert map values back to array
+    return Array.from(phoneMap.values());
+  }, [customers]);
+  
   // Handle search filter
-  const filteredCustomers = customers?.filter(customer => {
+  const filteredCustomers = (showUniqueCustomers ? uniqueCustomers : customers)?.filter((customer: Queue) => {
     const searchLower = searchTerm.toLowerCase();
     return (
       customer.name.toLowerCase().includes(searchLower) ||
@@ -51,11 +77,12 @@ export default function CustomerDatabase() {
 
   // Handle CSV export
   const exportToCSV = () => {
-    if (!customers || customers.length === 0) return;
+    const dataToExport = showUniqueCustomers ? uniqueCustomers : customers;
+    if (!dataToExport || dataToExport.length === 0) return;
 
     // Create CSV content
     const headers = ["Name", "Phone Number", "Service", "Price", "Payment Method", "Date", "Status"];
-    const csvContent = customers.map(customer => [
+    const csvContent = dataToExport.map((customer: Queue) => [
       customer.name,
       customer.phone_number,
       customer.service_type,
@@ -74,7 +101,10 @@ export default function CustomerDatabase() {
     link.setAttribute("href", url);
     // Use current date as string for filename
     const currentDate = format(new Date(), "yyyy-MM-dd");
-    link.setAttribute("download", `customer_database_${currentDate}.csv`);
+    const filename = showUniqueCustomers 
+      ? `unique_customer_contacts_${currentDate}.csv` 
+      : `customer_database_${currentDate}.csv`;
+    link.setAttribute("download", filename);
     link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
@@ -107,6 +137,24 @@ export default function CustomerDatabase() {
         />
       </div>
 
+      {/* Customer view toggle */}
+      <div className="flex items-center space-x-2">
+        <Switch
+          id="unique-customers"
+          checked={showUniqueCustomers}
+          onCheckedChange={setShowUniqueCustomers}
+        />
+        <Label htmlFor="unique-customers" className="flex items-center cursor-pointer">
+          <Users className="h-4 w-4 mr-2" />
+          Show unique customers only
+          {showUniqueCustomers && uniqueCustomers && (
+            <span className="text-sm ml-2 text-gray-400">
+              ({uniqueCustomers.length} unique contacts)
+            </span>
+          )}
+        </Label>
+      </div>
+
       {isLoading ? (
         <div className="space-y-2">
           <Skeleton className="h-10 w-full" />
@@ -118,7 +166,9 @@ export default function CustomerDatabase() {
           <Table>
             <TableCaption>
               {filteredCustomers?.length 
-                ? `Showing ${filteredCustomers.length} of ${customers?.length} customer records`
+                ? showUniqueCustomers 
+                  ? `Showing ${filteredCustomers.length} unique customers (filtered from ${customers?.length} total records)`
+                  : `Showing ${filteredCustomers.length} of ${customers?.length} customer records`
                 : "No customer records found"
               }
             </TableCaption>
@@ -134,7 +184,7 @@ export default function CustomerDatabase() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCustomers?.map((customer) => (
+              {filteredCustomers?.map((customer: Queue) => (
                 <TableRow key={customer.id}>
                   <TableCell className="font-medium">{customer.name}</TableCell>
                   <TableCell>{customer.phone_number}</TableCell>
