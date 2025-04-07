@@ -145,19 +145,17 @@ export default function CustomerCard({ customer }: CustomerCardProps) {
             </Badge>
           )}
           
-          {/* Payment verification button (for both cash and card payments that aren't verified) */}
-          {customer.payment_verified === "No" && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="btn-blue"
-              onClick={() => verifyPaymentMutation.mutate()}
-              disabled={verifyPaymentMutation.isPending}
-            >
-              <Check className="h-4 w-4 mr-2" />
-              Verify {customer.payment_method === "Cash" ? "Cash" : "Card"}
-            </Button>
-          )}
+          {/* Payment verification button - always show for both payment methods */}
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="btn-blue"
+            onClick={() => verifyPaymentMutation.mutate()}
+            disabled={verifyPaymentMutation.isPending || customer.payment_verified === "Yes"}
+          >
+            <Check className="h-4 w-4 mr-2" />
+            Verify {customer.payment_method === "Cash" ? "Cash" : "Card"}
+          </Button>
           
           {/* Almost Done button (only if not already almost done) */}
           {customer.status !== "Almost Done" && (
