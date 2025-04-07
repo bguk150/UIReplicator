@@ -1,0 +1,298 @@
+
+
+Live tail
+GMT+1
+
+
+==> Uploaded in 6.0s. Compression took 3.3s
+==> Build successful 🎉
+==> Deploying...
+==> Running 'npm run start'
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+Database configuration for: PRODUCTION (Render)
+Attempting database connection...
+Enabled 'trust proxy' for production environment
+Database configuration for: PRODUCTION (Render)
+Environment detected: PRODUCTION (Render)
+Node ENV: production
+Initializing PostgreSQL session store for production
+Database connected successfully
+Database URL domain: ep-spring-cherry-a6a3mhmh.us-west-2.aws.neon.tech
+PostgreSQL session store initialized successfully
+PostgreSQL session middleware configured
+5:29:23 AM [express] Setting up in production mode for stability
+HTTP server is now listening, initializing WebSocket server
+WebSocket server environment details:
+- NODE_ENV: production
+- Render detection: true
+- Server port: 10000
+WebSocket server initialized on path: /ws after HTTP server started
+5:29:23 AM [express] Server started in production mode
+5:29:23 AM [express] Listening on port 10000
+5:29:23 AM [express] WebSocket server enabled and listening
+WebSocket verifyClient called:
+- Origin: https://uireplicator.onrender.com
+- Secure: no
+- URL path: /ws
+- Headers present: host, user-agent, accept-encoding, accept-language, cache-control, cdn-loop, cf-connecting-ip, cf-ipcountry, cf-ray, cf-visitor, connection, cookie, origin, pragma, render-proxy-ttl, rndr-id, sec-websocket-extensions, sec-websocket-key, sec-websocket-version, true-client-ip, upgrade, x-forwarded-for, x-forwarded-proto, x-render-as-num, x-render-threat-score
+Render production environment detected - accepting all WebSocket connections
+WebSocket client connected from 127.0.0.1, URL: /ws, Host: uireplicator.onrender.com, Origin: https://uireplicator.onrender.com
+Connection environment: Render Production
+Cookies present: Yes
+Cookie names: beyond.sid
+Total connected clients: 1
+Auth check: { hasSession: true, userId: 1, path: '/api/queue' }
+GET /api/queue: Fetching active queue items
+Fetching all active queue items from database
+==> Your service is live 🎉
+Database query error: error: column "selected_extras" does not exist
+    at file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async NeonPreparedQuery.execute (file:///opt/render/project/src/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+Retrieved 0 active queue items
+    at async DatabaseStorage.getAllQueueItems (file:///opt/render/project/src/dist/index.js:201:21)
+    at async file:///opt/render/project/src/dist/index.js:685:26 {
+  length: 115,
+GET /api/queue: Returning 0 queue items
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '91',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '3722',
+  routine: 'errorMissingColumn'
+}
+5:29:26 AM [express] GET /api/queue 200 in 439ms :: []
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+WebSocket verifyClient called:
+- Origin: https://uireplicator.onrender.com
+- Secure: no
+- URL path: /ws
+- Headers present: host, user-agent, accept-encoding, accept-language, cache-control, cdn-loop, cf-connecting-ip, cf-ipcountry, cf-ray, cf-visitor, connection, cookie, origin, pragma, render-proxy-ttl, rndr-id, sec-websocket-extensions, sec-websocket-key, sec-websocket-version, true-client-ip, upgrade, x-forwarded-for, x-forwarded-proto, x-render-as-num, x-render-threat-score
+Render production environment detected - accepting all WebSocket connections
+WebSocket client connected from 127.0.0.1, URL: /ws, Host: uireplicator.onrender.com, Origin: https://uireplicator.onrender.com
+Connection environment: Render Production
+Cookies present: Yes
+Cookie names: beyond.sid
+Total connected clients: 2
+5:29:27 AM [express] GET /api/queue/stats 500 in 865ms :: {"message":"Failed to fetch stats"}
+WebSocket client disconnected: Code 1001, Reason: 
+Total connected clients: 1
+Session check request:  {
+  sessionId: 'I3HgFVLwmJ4blVBvOAmxKD-6M9Mt5p0k',
+  hasSession: true,
+  userId: 1,
+  remoteIp: '10.201.150.4',
+  environment: 'Production',
+  isRender: true,
+  hasCookieHeader: true,
+  cookieCount: 1,
+  isSecure: true
+}
+5:29:44 AM [express] GET /api/auth/session 304 in 284ms :: {"isLoggedIn":true,"username":"beyondgroo…
+WebSocket message received: PING
+Received pong from client, connection marked as alive
+5:30:00 AM [express] POST /api/queue 500 in 1745ms :: {"message":"Failed to add to queue"}
+5:30:02 AM [express] POST /api/queue 500 in 871ms :: {"message":"Failed to add to queue"}
+Session check request:  {
+  sessionId: 'JeXsh_6SmwujGMBPiPdTpJXiRxpAwGJ6',
+  hasSession: true,
+  userId: 1,
+  remoteIp: '10.201.203.69',
+  environment: 'Production',
+  isRender: true,
+  hasCookieHeader: true,
+  cookieCount: 1,
+  isSecure: true
+}
+5:30:04 AM [express] GET /api/auth/session 304 in 286ms :: {"isLoggedIn":true,"username":"beyondgroo…
+5:30:06 AM [express] POST /api/queue 500 in 882ms :: {"message":"Failed to add to queue"}
+5:30:08 AM [express] POST /api/queue 500 in 873ms :: {"message":"Failed to add to queue"}
+5:30:16 AM [express] POST /api/queue 500 in 866ms :: {"message":"Failed to add to queue"}
+WebSocket message received: PING
+5:30:18 AM [express] POST /api/queue 500 in 873ms :: {"message":"Failed to add to queue"}
+Received pong from client, connection marked as alive
+5:30:27 AM [express] POST /api/queue 500 in 878ms :: {"message":"Failed to add to queue"}
+5:30:29 AM [express] POST /api/queue 500 in 878ms :: {"message":"Failed to add to queue"}
+WebSocket message received: PING
+Received pong from client, connection marked as alive
+WebSocket message received: PING
+Received pong from client, connection marked as alive
+WebSocket message received: PING
+5:31:41 AM [express] POST /api/queue 500 in 1737ms :: {"message":"Failed to add to queue"}
+5:31:43 AM [express] POST /api/queue 500 in 873ms :: {"message":"Failed to add to queue"}
+WebSocket verifyClient called:
+- Origin: https://uireplicator.onrender.com
+- Secure: no
+- URL path: /ws
+- Headers present: host, user-agent, accept-encoding, accept-language, cache-control, cdn-loop, cf-connecting-ip, cf-ipcountry, cf-ray, cf-visitor, connection, cookie, origin, pragma, render-proxy-ttl, rndr-id, sec-websocket-extensions, sec-websocket-key, sec-websocket-version, true-client-ip, upgrade, x-forwarded-for, x-forwarded-proto, x-render-as-num, x-render-threat-score
+Render production environment detected - accepting all WebSocket connections
+WebSocket client connected from 127.0.0.1, URL: /ws, Host: uireplicator.onrender.com, Origin: https://uireplicator.onrender.com
+Connection environment: Render Production
+Cookies present: Yes
+Cookie names: beyond.sid
+Total connected clients: 2
+Auth check: { hasSession: true, userId: 1, path: '/api/queue' }
+GET /api/queue: Fetching active queue items
+Fetching all active queue items from database
+Retrieved 0 active queue items
+Database query error: error: column "selected_extras" does not exist
+    at file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async NeonPreparedQuery.execute (file:///opt/render/project/src/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+    at async DatabaseStorage.getAllQueueItems (file:///opt/render/project/src/dist/index.js:201:21)
+GET /api/queue: Returning 0 queue items
+    at async file:///opt/render/project/src/dist/index.js:685:26 {
+  length: 115,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '91',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '3722',
+  routine: 'errorMissingColumn'
+}
+5:31:46 AM [express] GET /api/queue 200 in 879ms :: []
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+5:31:47 AM [express] GET /api/queue/stats 500 in 1755ms :: {"message":"Failed to fetch stats"}
+Auth check: { hasSession: true, userId: 1, path: '/api/customers' }
+GET /api/customers: Fetching all customer records
+Fetching all customer records from database (including served)
+Database query error: error: column "selected_extras" does not exist
+    at file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async NeonPreparedQuery.execute (file:///opt/render/project/src/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+    at async DatabaseStorage.getAllCustomerRecords (file:///opt/render/project/src/dist/index.js:260:21)
+    at async file:///opt/render/project/src/dist/index.js:707:25 {
+  length: 115,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '91',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '3722',
+  routine: 'errorMissingColumn'
+}
+Retrieved 0 total customer records
+GET /api/customers: Returning 0 customer records
+5:31:47 AM [express] GET /api/customers 200 in 873ms :: []
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+5:31:48 AM [express] GET /api/queue/stats 500 in 865ms :: {"message":"Failed to fetch stats"}
+WebSocket client disconnected: Code 1001, Reason: 
+Total connected clients: 1
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+5:31:51 AM [express] GET /api/queue/stats 500 in 875ms :: {"message":"Failed to fetch stats"}
+Received pong from client, connection marked as alive
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+5:31:56 AM [express] GET /api/queue/stats 500 in 949ms :: {"message":"Failed to fetch stats"}
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+Auth check: { hasSession: true, userId: 1, path: '/api/queue' }
+GET /api/queue: Fetching active queue items
+Fetching all active queue items from database
+Database query error: error: column "selected_extras" does not exist
+    at file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async NeonPreparedQuery.execute (file:///opt/render/project/src/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+    at async DatabaseStorage.getAllQueueItems (file:///opt/render/project/src/dist/index.js:201:21)
+    at async file:///opt/render/project/src/dist/index.js:685:26 {
+  length: 115,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '91',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '3722',
+  routine: 'errorMissingColumn'
+}
+Retrieved 0 active queue items
+GET /api/queue: Returning 0 queue items
+5:32:00 AM [express] GET /api/queue 304 in 878ms :: []
+5:32:00 AM [express] GET /api/queue/stats 500 in 879ms :: {"message":"Failed to fetch stats"}
+Session check request:  {
+  sessionId: 'JeXsh_6SmwujGMBPiPdTpJXiRxpAwGJ6',
+  hasSession: true,
+  userId: 1,
+  remoteIp: '10.201.49.4',
+  environment: 'Production',
+  isRender: true,
+  hasCookieHeader: true,
+  cookieCount: 1,
+  isSecure: true
+}
+5:32:00 AM [express] GET /api/auth/session 304 in 289ms :: {"isLoggedIn":true,"username":"beyondgroo…
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+5:32:02 AM [express] GET /api/queue/stats 500 in 874ms :: {"message":"Failed to fetch stats"}
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+5:32:05 AM [express] GET /api/queue/stats 500 in 878ms :: {"message":"Failed to fetch stats"}
+WebSocket message received: PING
+WebSocket message received: PING
+Received pong from client, connection marked as alive
+Auth check: { hasSession: true, userId: 1, path: '/api/queue' }
+GET /api/queue: Fetching active queue items
+Fetching all active queue items from database
+Auth check: { hasSession: true, userId: 1, path: '/api/queue/stats' }
+Database query error: error: column "selected_extras" does not exist
+    at file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async NeonPreparedQuery.execute (file:///opt/render/project/src/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+Retrieved 0 active queue items
+    at async DatabaseStorage.getAllQueueItems (file:///opt/render/project/src/dist/index.js:201:21)
+    at async file:///opt/render/project/src/dist/index.js:685:26 {
+  length: 115,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+GET /api/queue: Returning 0 queue items
+  position: '91',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '3722',
+  routine: 'errorMissingColumn'
+}
+5:32:25 AM [express] GET /api/queue 304 in 1735ms :: []
+5:32:25 AM [express] GET /api/queue/stats 500 in 1760ms :: {"message":"Failed to fetch stats"}

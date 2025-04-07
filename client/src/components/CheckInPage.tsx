@@ -1,4 +1,4 @@
-import { User, Phone, Scissors, CreditCard, Clock, Info, Plus, X } from "lucide-react";
+import { User, Phone, Scissors, CreditCard, Clock, Info } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
@@ -6,12 +6,11 @@ import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { QueueFormData, queueFormSchema } from "@shared/schema";
 import { queueService } from "@/lib/supabase";
-import { serviceMenu, getServicePriceByName, getServiceCategoryByName, Service } from "@/lib/serviceData";
+import { serviceMenu, getServicePriceByName, getServiceCategoryByName } from "@/lib/serviceData";
 
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Select, 
   SelectContent, 
@@ -31,8 +30,6 @@ export default function CheckInPage() {
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [servicePrice, setServicePrice] = useState<string | null>(null);
   const [serviceCategory, setServiceCategory] = useState<string | null>(null);
-  const [selectedExtras, setSelectedExtras] = useState<Service[]>([]);
-  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const { toast } = useToast();
   
   const form = useForm<QueueFormData>({
