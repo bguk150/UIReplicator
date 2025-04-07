@@ -24,6 +24,12 @@ export const queueService = {
     return res.json();
   },
   
+  // Get all customer records (including served) for the customer database
+  async getAllCustomerRecords(): Promise<Queue[]> {
+    const res = await apiRequest('GET', '/api/customers');
+    return res.json();
+  },
+  
   // Update a queue item (status, etc.)
   async updateQueueItem(id: number, updates: Partial<Queue>): Promise<Queue> {
     const res = await apiRequest('PUT', `/api/queue/${id}`, updates);

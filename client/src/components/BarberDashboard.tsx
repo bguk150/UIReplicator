@@ -2,18 +2,21 @@ import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queueService } from "@/lib/supabase";
 import { Queue } from "@shared/schema";
-import { RefreshCw, Users, Clock, Mail, Wifi, WifiOff } from "lucide-react";
+import { RefreshCw, Users, Clock, Wifi, WifiOff, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatsCard } from "@/components/ui/stats-card";
 import CustomerCard from "@/components/CustomerCard";
+import CustomerDatabase from "@/components/CustomerDatabase";
 import { useToast } from "@/hooks/use-toast";
 import { useQueueUpdates } from "@/lib/websocket";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function BarberDashboard() {
   const { toast } = useToast();
   const [refreshKey, setRefreshKey] = useState(0);
   const [wsConnected, setWsConnected] = useState(false);
+  const [activeTab, setActiveTab] = useState("queue");
 
   // Set up queue updates via WebSocket
   const websocket = useQueueUpdates(useCallback(() => {
@@ -179,23 +182,34 @@ export default function BarberDashboard() {
         )}
       </div>
 
-      {/* Customer Queue */}
-      <div className="space-y-5">
-        {isQueueLoading ? (
-          <>
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
-          </>
-        ) : sortedQueue.length > 0 ? (
-          sortedQueue.map((customer: Queue) => (
-            <CustomerCard key={customer.id} customer={customer} />
-          ))
-        ) : (
-          <div className="p-5 rounded-xl shadow-lg gradient-card text-center">
-            <p className="text-lg text-gray-300">No customers in the queue</p>
-          </div>
-        )}
-      </div>
+      {/* Tabs for Queue and Customer Database */}
+      <Tabs defaultValue="queue" value={activeTab} onValueChange={setActiveTab} className="mb-6">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="queue">Active Queue</TabsTrigger>
+          <TabsTrigger value="database">Customer Database</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="queue" className="space-y-5">
+          {isQueueLoading ? (
+            <>
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </>
+          ) : sortedQueue.length > 0 ? (
+            sortedQueue.map((customer: Queue) => (
+              <CustomerCard key={customer.id} customer={customer} />
+            ))
+          ) : (
+            <div className="p-5 rounded-xl shadow-lg gradient-card text-center">
+              <p className="text-lg text-gray-300">No customers in the queue</p>
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="database">
+          <CustomerDatabase />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

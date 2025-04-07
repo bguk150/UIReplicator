@@ -581,6 +581,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get all customer records (including served) - for customer database view
+  app.get('/api/customers', isAuthenticated, async (req, res) => {
+    try {
+      console.log("GET /api/customers: Fetching all customer records");
+      const customers = await storage.getAllCustomerRecords();
+      console.log(`GET /api/customers: Returning ${customers.length} customer records`);
+      return res.status(200).json(customers);
+    } catch (error) {
+      console.error("GET /api/customers error:", error);
+      return res.status(500).json({ message: "Failed to fetch customer records" });
+    }
+  });
+  
   // Update queue item status (almost done, served, etc)
   app.put('/api/queue/:id', isAuthenticated, async (req, res) => {
     try {

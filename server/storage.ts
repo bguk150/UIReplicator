@@ -10,6 +10,9 @@ export interface IStorage {
   getQueueItemById(id: number): Promise<Queue | undefined>;
   insertQueueItem(item: InsertQueue): Promise<Queue>;
   updateQueueItem(id: number, updates: Partial<Queue>): Promise<Queue | undefined>;
+  
+  // Customer Database methods
+  getAllCustomerRecords(): Promise<Queue[]>; // New method to get all records including served customers
 
   // User (Barber) methods
   getUser(id: number): Promise<User | undefined>;
@@ -29,13 +32,16 @@ export class DatabaseStorage implements IStorage {
 
   private async initializeDefaultBarber() {
     try {
+      // Check for existing user
       const existingUser = await this.getUserByUsername("beyondgroominguk@gmail.com");
+      
+      // Create the default barber if it doesn't exist
       if (!existingUser) {
         const defaultBarber: InsertUser = {
           username: "beyondgroominguk@gmail.com",
           password: "bg_uk123", // In a real app, this would be hashed
-          role: "barber"
         };
+        
         await this.createUser(defaultBarber);
         console.log("Created default barber account");
       }
@@ -129,6 +135,26 @@ export class DatabaseStorage implements IStorage {
     }
 
     return undefined;
+  }
+
+  // Customer Database methods
+  async getAllCustomerRecords(): Promise<Queue[]> {
+    try {
+      console.log("Fetching all customer records from database (including served)");
+
+      const items = await db.select().from(queue)
+        .orderBy(desc(queue.check_in_time)) // Most recent first
+        .catch(err => {
+          console.error("Database query error:", err);
+          return [];
+        });
+
+      console.log(`Retrieved ${items.length} total customer records`);
+      return items;
+    } catch (error) {
+      console.error("Error fetching customer records:", error);
+      return []; // Return empty array on error
+    }
   }
 
   // Stats methods
