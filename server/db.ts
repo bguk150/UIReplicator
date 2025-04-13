@@ -1,26 +1,7 @@
 
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/pg';
 import * as schema from "@shared/schema";
-
-// Set WebSocket constructor for Neon serverless
-neonConfig.webSocketConstructor = ws;
-
-// Note: While these configuration options aren't currently in the type definition,
-// they are supported in the actual implementation. TypeScript may show errors but
-// they will work at runtime.
-// See: https://github.com/neondatabase/serverless/blob/main/CONNECTION_POOLS.md
-
-// @ts-ignore - Set Neon serverless WebSocket reconnection options
-neonConfig.wsReconnectDelay = 1000; // 1 second before first reconnection attempt
-// @ts-ignore - Set max reconnection attempts
-neonConfig.wsMaxReconnects = 3; // Limit reconnection attempts
-
-// @ts-ignore - Configure deadlock retry options
-neonConfig.deadlockMaxRetries = 5;
-// @ts-ignore - Set retry delay for deadlocks
-neonConfig.deadlockRetryDelayMs = 250;
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
