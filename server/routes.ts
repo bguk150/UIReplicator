@@ -226,69 +226,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   console.log(`Environment detected: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}${isRender ? ' (Render)' : ''}`);
   console.log(`Node ENV: ${process.env.NODE_ENV}`);
   
-  // Force use PostgreSQL session store in production
-  if (isProduction && process.env.DATABASE_URL) {
-    try {
-      console.log('Initializing PostgreSQL session store for production');
-      
-      // Import the PostgreSQL session store
-      const { default: connectPgSimple } = await import('connect-pg-simple');
-      const PgSession = connectPgSimple(session);
-      
-      // Create the store with detailed options
-      const pgStore = new PgSession({
-        conString: process.env.DATABASE_URL,
-        createTableIfMissing: true,
-        tableName: 'session', // Default table name
-        pruneSessionInterval: 60 * 15, // Clean up expired sessions every 15 minutes
-        errorLog: (err) => console.error('Session store error:', err)
-      });
-      
-      // Test the connection to the session store
-      await new Promise<void>((resolve, reject) => {
-        pgStore.pruneSessions((err) => {
-          if (err) {
-            console.error('Failed to initialize session store:', err);
-            reject(err);
-          } else {
-            console.log('PostgreSQL session store initialized successfully');
-            resolve();
-          }
-        });
-      });
-      
-      // Configure session with the PostgreSQL store
-      app.use(session({
-        store: pgStore,
-        secret: process.env.SESSION_SECRET || 'beyond-grooming-secret',
-        resave: false,
-        saveUninitialized: false,
-        proxy: true, // Trust the first proxy (critical for Render.com)
-        cookie: {
-          secure: isProduction, // Use secure cookies in production
-          sameSite: isProduction ? 'none' : 'lax', // Proper cross-site cookie handling
-          maxAge: 24 * 60 * 60 * 1000, // 24 hours
-          path: '/',
-          httpOnly: true,
-          // Render.com specific cookie settings for production security
-          ...(isRender ? {
-            domain: process.env.RENDER_EXTERNAL_HOSTNAME || undefined
-          } : {})
-        },
-        name: 'beyond.sid' // Custom name to avoid the default connect.sid
-      }));
-      
-      console.log('PostgreSQL session middleware configured');
-    } catch (err) {
-      console.error('Error setting up PostgreSQL session store:', err);
-      // Fallback to MemoryStore only as a last resort with warning
-      console.error('WARNING: Falling back to MemoryStore for sessions. This is not recommended for production!');
-      setupMemoryStore();
-    }
-  } else {
-    console.log('Using MemoryStore for development environment');
-    setupMemoryStore();
-  }
+  // Always use MemoryStore for sessions since we're using Turso for the database
+  // This avoids the PostgreSQL endpoint disabled issue on Render
+  console.log(`Using MemoryStore for ${isProduction ? 'production' : 'development'} environment`);
+  setupMemoryStore();
   
   // Helper function to set up MemoryStore (used for development or as fallback)
   function setupMemoryStore() {

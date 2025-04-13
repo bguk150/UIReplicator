@@ -1,0 +1,115 @@
+==> Cloning from https://github.com/bguk150/UIReplicator
+==> Checking out commit d7d98cefcdc9c8782a23fcd1977748a11d5c1d4c in branch main
+==> Downloading cache...
+==> Transferred 232MB in 8s. Extraction took 4s.
+==> Using Node.js version 22.14.0 (default)
+==> Docs on specifying a Node.js version: https://render.com/docs/node-version
+==> Using Bun version 1.1.0 (default)
+==> Docs on specifying a bun version: https://render.com/docs/bun-version
+==> Running build command 'npm install --include=dev && npm run build'...
+up to date, audited 543 packages in 1s
+69 packages are looking for funding
+  run `npm fund` for details
+7 moderate severity vulnerabilities
+To address issues that do not require attention, run:
+  npm audit fix
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+Run `npm audit` for details.
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+vite v5.4.17 building for production...
+transforming...
+✓ 2155 modules transformed.
+rendering chunks...
+computing gzip size...
+../dist/public/index.html                   3.80 kB │ gzip:   1.43 kB
+../dist/public/assets/index-CV9eyD7n.css   60.55 kB │ gzip:  10.75 kB
+../dist/public/assets/index-CaDRG9V_.js   495.78 kB │ gzip: 152.87 kB
+✓ built in 4.18s
+  dist/index.js  37.1kb
+⚡ Done in 6ms
+==> Uploading build...
+==> Uploaded in 6.6s. Compression took 3.2s
+==> Build successful 🎉
+==> Deploying...
+==> Running 'npm run start'
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+Database configuration for: PRODUCTION
+Checking Turso database connection...
+Enabled 'trust proxy' for production environment
+Database configuration for: PRODUCTION (Render)
+Environment detected: PRODUCTION (Render)
+Node ENV: production
+Initializing PostgreSQL session store for production
+Turso database connected successfully!
+Database URL: libsql://beyondgrooming-beyondgrooming.aws-eu-west-1.turso.io
+Default barber account already exists
+Failed to initialize session store: error: Console request failed: endpoint is disabled
+    at /opt/render/project/src/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async PGStore._asyncQuery (/opt/render/project/src/node_modules/connect-pg-simple/index.js:322:21)
+    at async PGStore._rawEnsureSessionStoreTable (/opt/render/project/src/node_modules/connect-pg-simple/index.js:177:19)
+    at async PGStore._asyncQuery (/opt/render/project/src/node_modules/connect-pg-simple/index.js:315:7) {
+  length: 65,
+  severity: 'ERROR',
+  code: 'XX000',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: undefined,
+  line: undefined,
+  routine: undefined
+}
+Error setting up PostgreSQL session store: error: Console request failed: endpoint is disabled
+    at /opt/render/project/src/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async PGStore._asyncQuery (/opt/render/project/src/node_modules/connect-pg-simple/index.js:322:21)
+    at async PGStore._rawEnsureSessionStoreTable (/opt/render/project/src/node_modules/connect-pg-simple/index.js:177:19)
+    at async PGStore._asyncQuery (/opt/render/project/src/node_modules/connect-pg-simple/index.js:315:7) {
+  length: 65,
+  severity: 'ERROR',
+Setting up session with:
+  code: 'XX000',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+      - Environment: Production (Render)
+      - Secure cookies: true
+      - SameSite: none
+      - Cookie domain: uireplicator.onrender.com
+      - Proxy trusted: true
+    
+  constraint: undefined,
+  file: undefined,
+  line: undefined,
+  routine: undefined
+}
+WARNING: Falling back to MemoryStore for sessions. This is not recommended for production!
+3:12:23 PM [express] Setting up in production mode for stability
+HTTP server is now listening, initializing WebSocket server
+WebSocket server environment details:
+- NODE_ENV: production
+- Render detection: true
+- Server port: 10000
+WebSocket server initialized on path: /ws after HTTP server started
+3:12:23 PM [express] Server started in production mode
+3:12:23 PM [express] Listening on port 10000
+3:12:23 PM [express] WebSocket server enabled and listening
+==> Your service is live 🎉
