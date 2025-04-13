@@ -15,7 +15,7 @@ export default function CustomerDatabase() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showUniqueCustomers, setShowUniqueCustomers] = useState(false);
   
-  // Query to fetch all customer records
+  // Query to fetch all customer records with auto-refresh
   const { data: customers, isLoading, refetch } = useQuery<Queue[]>({
     queryKey: ['/api/customers'],
     queryFn: async () => {
@@ -23,7 +23,9 @@ export default function CustomerDatabase() {
       console.log("Customer database records loaded:", result.length);
       return result;
     },
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000, // Auto-refresh every 30 seconds
+    staleTime: 10000, // Data considered fresh for 10 seconds
   });
 
   // Format date for display
@@ -114,13 +116,9 @@ export default function CustomerDatabase() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        {/* Removed duplicate "Customer Database" heading */}
+        {/* Auto-refresh enabled, so only showing export button */}
         <div className="flex-1"></div>
         <div className="flex gap-2">
-          <Button onClick={handleRefresh} variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
           <Button onClick={exportToCSV} variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" />
             Export CSV
