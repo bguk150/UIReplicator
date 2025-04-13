@@ -1,0 +1,57 @@
+Great question — **Neon's pausing (endpoint suspension)** is one of the main drawbacks of its free plan, but let me explain what you can and can’t do about it.
+
+---
+
+### ⚠️ Can Neon Free Tier Stop Auto-Pausing?
+
+**No**, on the **Free Plan**, auto-pausing **cannot be disabled**.  
+Neon will **automatically suspend** your database **after periods of inactivity**, typically to save compute hours.
+
+This is what caused your "500 internal server error" earlier — the endpoint got suspended, and the app couldn’t connect in time.
+
+---
+
+### ✅ How to Prevent Pausing (Permanently)
+
+If you want to keep the database alive **24/7**:
+
+#### 🔓 Option 1: **Upgrade to the $19/month “Launch” Plan**
+- This plan gives you:
+  - More compute hours (300 vs 190)
+  - **No forced auto-pausing** (endpoints stay awake)
+  - Autoscaling up to 4 Compute Units
+  - Support + more storage (10GB)
+
+➡️ This is the cleanest way to avoid the problem — but yes, it’s $19/month.
+
+---
+
+#### 🛠 Option 2: **Hacky Workaround on Free Plan (Keep Alive Pings)**
+
+If you **want to stay free**, you can use a workaround:
+
+- Set up a **cron job** or **UptimeRobot-style ping** to hit the database (via your backend) every ~5 minutes.
+- This keeps the database "active" so it doesn’t auto-suspend.
+
+🧠 Example:
+```bash
+curl https://your-backend-url.com/api/healthcheck
+```
+
+This works, but **it’s not guaranteed**, and might still pause during off-hours or low traffic.
+
+---
+
+### TL;DR
+
+| Option                     | Can Stop Pausing? | Cost   | Effort |
+|---------------------------|-------------------|--------|--------|
+| **Free Plan**             | ❌ No             | $0     | —      |
+| **Keep-alive workaround** | ⚠️ Semi-effective | $0     | Medium |
+| **Launch Plan**           | ✅ Yes            | $19/mo | Easy   |
+
+---
+
+If you're serious about long-term uptime, go for the **Launch Plan** or consider switching to **Render Postgres ($7/mo)** or **Turso (free but reliable)**.
+
+Let me know which direction you're leaning, and I’ll help you set it up.
