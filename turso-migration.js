@@ -1,11 +1,11 @@
+#!/usr/bin/env node
 // Turso Migration Script
 // This script creates the necessary tables in Turso database
 
 import { createClient } from '@libsql/client';
-import dotenv from 'dotenv';
+import 'dotenv/config';
 
-// Load environment variables
-dotenv.config();
+// Environment variables loaded via 'dotenv/config'
 
 // Validate environment variables
 if (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN) {

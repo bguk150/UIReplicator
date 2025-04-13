@@ -33,17 +33,19 @@ export class DatabaseStorage implements IStorage {
   private async initializeDefaultBarber() {
     try {
       // Check for existing user
-      const existingUser = await this.getUserByUsername("beyondgroominguk@gmail.com");
+      const existingUser = await this.getUserByUsername("beyondgrooming@gmail.com");
       
       // Create the default barber if it doesn't exist
       if (!existingUser) {
         const defaultBarber: InsertUser = {
-          username: "beyondgroominguk@gmail.com",
-          password: "bg_uk123", // In a real app, this would be hashed
+          username: "beyondgrooming@gmail.com",
+          password: "password123", // In a real app, this would be hashed
         };
         
         await this.createUser(defaultBarber);
         console.log("Created default barber account");
+      } else {
+        console.log("Default barber account already exists");
       }
     } catch (error) {
       console.error("Failed to initialize default barber:", error);
@@ -117,12 +119,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateQueueItem(id: number, updates: Partial<Queue>): Promise<Queue | undefined> {
-    const [updatedItem] = await db.update(queue)
-      .set(updates)
-      .where(eq(queue.id, id))
-      .returning();
-
-    return updatedItem || undefined;
+    try {
+      // For SQLite/Turso we need to handle returning manually
+      await db.update(queue)
+        .set(updates)
+        .where(eq(queue.id, id));
+      
+      // Get the updated item
+      return await this.getQueueItemById(id);
+    } catch (error) {
+      console.error("Error updating queue item:", error);
+      return undefined;
+    }
   }
 
   // User methods
