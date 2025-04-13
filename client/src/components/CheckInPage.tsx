@@ -190,7 +190,7 @@ export default function CheckInPage() {
                         <Phone className="h-4 w-4 text-gray-500" />
                       </div>
                       <Input 
-                        placeholder="7XXXXXXXXX" 
+                        placeholder="Enter your mobile number" 
                         className="pl-10 bg-gray-800" 
                         {...field} 
                       />
