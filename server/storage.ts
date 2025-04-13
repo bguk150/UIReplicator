@@ -1,6 +1,6 @@
 import { queue, users, type Queue, type InsertQueue, type User, type InsertUser } from "@shared/schema";
 import { db } from "./db";
-import { eq, ne, desc, asc, and } from "drizzle-orm";
+import { eq, ne, desc, asc, and, sql } from "drizzle-orm";
 
 // Storage interface with CRUD methods for queue management
 export interface IStorage {
@@ -84,17 +84,36 @@ export class DatabaseStorage implements IStorage {
   }
 
   async insertQueueItem(item: InsertQueue): Promise<Queue> {
-    const now = new Date();
-
-    const [queueItem] = await db.insert(queue).values({
-      ...item,
-      check_in_time: now,
-      status: "Waiting",
-      payment_verified: "No", // All payments require manual verification
-      sms_sent: "No"
-    }).returning();
-
-    return queueItem;
+    try {
+      // For SQLite/Turso we need to handle returning manually since it's not supported the same way
+      const result = await db.insert(queue).values({
+        name: item.name,
+        phone_number: item.phone_number,
+        service_type: item.service_type,
+        service_price: item.service_price || "",
+        service_category: item.service_category || "",
+        selected_extras: item.selected_extras || "",
+        payment_method: item.payment_method,
+        marketing_sms: item.marketing_sms || "No",
+        check_in_time: new Date().toISOString(),
+        status: "Waiting",
+        payment_verified: "No",
+        sms_sent: "No"
+      });
+      
+      // Get the inserted item by its ID
+      const insertedId = Number(result.lastInsertRowid);
+      const insertedItem = await this.getQueueItemById(insertedId);
+      
+      if (!insertedItem) {
+        throw new Error("Failed to retrieve inserted queue item");
+      }
+      
+      return insertedItem;
+    } catch (error) {
+      console.error("Error inserting queue item:", error);
+      throw error;
+    }
   }
 
   async updateQueueItem(id: number, updates: Partial<Queue>): Promise<Queue | undefined> {
@@ -119,10 +138,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users)
-      .values({ ...insertUser, role: "barber" })
-      .returning();
-    return user;
+    try {
+      // For SQLite/Turso we need to handle returning manually
+      const result = await db.insert(users).values({
+        username: insertUser.username,
+        password: insertUser.password,
+        role: "barber"
+      });
+      
+      // Get the inserted user by its ID
+      const insertedId = Number(result.lastInsertRowid);
+      const insertedUser = await this.getUser(insertedId);
+      
+      if (!insertedUser) {
+        throw new Error("Failed to retrieve inserted user");
+      }
+      
+      return insertedUser;
+    } catch (error) {
+      console.error("Error creating user:", error);
+      throw error;
+    }
   }
 
   async verifyUserCredentials(username: string, password: string): Promise<User | undefined> {

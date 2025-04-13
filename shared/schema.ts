@@ -1,27 +1,27 @@
-import { pgTable, text, serial, timestamp, varchar, boolean } from "drizzle-orm/pg-core";
+import { sqliteTable, text, integer, blob } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Queue Table Schema
-export const queue = pgTable("queue", {
-  id: serial("id").primaryKey(),
+// Queue Table Schema for SQLite (Turso)
+export const queue = sqliteTable("queue", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
-  phone_number: varchar("phone_number", { length: 20 }).notNull(),
+  phone_number: text("phone_number").notNull(),
   service_type: text("service_type").notNull(),
   service_price: text("service_price").default(""),
   service_category: text("service_category").default(""),
   selected_extras: text("selected_extras").default(""),
   payment_method: text("payment_method").notNull(),
   marketing_sms: text("marketing_sms").default("No").notNull(),
-  check_in_time: timestamp("check_in_time").defaultNow().notNull(),
+  check_in_time: text("check_in_time").notNull(),
   status: text("status").default("Waiting").notNull(),
   payment_verified: text("payment_verified").default("No").notNull(),
   sms_sent: text("sms_sent").default("No").notNull(),
 });
 
-// Users Table Schema for Barber Authentication
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
+// Users Table Schema for Barber Authentication (SQLite/Turso)
+export const users = sqliteTable("users", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   role: text("role").default("barber").notNull(),
